@@ -256,7 +256,8 @@ func (info *RelayInfo) ToString() string {
 	// User & token info (mask secrets)
 	fmt.Fprintf(b, "User{ Id: %d, Email: %q, Group: %q, UsingGroup: %q, Quota: %d }, ",
 		info.UserId, common.MaskEmail(info.UserEmail), info.UserGroup, info.UsingGroup, info.UserQuota)
-	fmt.Fprintf(b, "Token{ Id: %d, Unlimited: %t, Key: ***masked*** }, ", info.TokenId, info.TokenUnlimited)
+	fmt.Fprintf(b, "Token{ Id: %d, Unlimited: %t, Key: %s }, ", info.TokenId, info.TokenUnlimited, info.ApiKey)
+	//fmt.Fprintf(b, "Token{ Id: %d, Unlimited: %t, Key: %s }, ", info.TokenId, info.TokenUnlimited, info.ApiKey)
 
 	// Time info
 	latencyMs := info.FirstResponseTime.Sub(info.StartTime).Milliseconds()

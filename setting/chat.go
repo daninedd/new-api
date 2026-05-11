@@ -17,7 +17,7 @@ var Chats = []map[string]string{
 		"AionUI": "aionui://provider/add?v=1&data={aionuiConfig}",
 	},
 	{
-		"流畅阅读": "fluentread",
+		"Fluent Read": "fluentread",
 	},
 	{
 		"CC Switch": "ccswitch",
@@ -32,7 +32,7 @@ var Chats = []map[string]string{
 		"AI as Workspace": "https://aiaw.app/set-provider?provider={\"type\":\"openai\",\"settings\":{\"apiKey\":\"{key}\",\"baseURL\":\"{address}/v1\",\"compatibility\":\"strict\"}}",
 	},
 	{
-		"AMA 问天": "ama://set-api-key?server={address}&key={key}",
+		"AMA Wentian": "ama://set-api-key?server={address}&key={key}",
 	},
 	{
 		"OpenCat": "opencat://team/join?domain={address}&token={key}",
