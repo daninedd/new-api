@@ -363,7 +363,7 @@ export async function onCustomOAuthClicked(provider, options = {}) {
     redirectToOAuthUrl(authUrl);
   } catch (error) {
     console.error('Failed to initiate custom OAuth:', error);
-    showError('OAuth 登录失败：' + (error.message || '未知错误'));
+    showError('OAuth login failed: ' + (error.message || 'Unknown error'));
   }
 }
 

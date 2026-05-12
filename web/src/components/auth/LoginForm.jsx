@@ -184,7 +184,7 @@ const LoginForm = () => {
 
   const onSubmitWeChatVerificationCode = async () => {
     if (turnstileEnabled && turnstileToken === '') {
-      showInfo('请稍后几秒重试，Turnstile 正在检查用户环境！');
+      showInfo('Please try again in a few seconds. Turnstile is checking your environment!');
       return;
     }
     setWechatCodeSubmitLoading(true);
@@ -199,13 +199,13 @@ const LoginForm = () => {
         setUserData(data);
         updateAPI();
         navigate('/');
-        showSuccess('登录成功！');
+        showSuccess('Login successful!');
         setShowWeChatLoginModal(false);
       } else {
         showError(message);
       }
     } catch (error) {
-      showError('登录失败，请重试');
+      showError('Login failed. Please try again');
     } finally {
       setWechatCodeSubmitLoading(false);
     }
@@ -221,7 +221,7 @@ const LoginForm = () => {
       return;
     }
     if (turnstileEnabled && turnstileToken === '') {
-      showInfo('请稍后几秒重试，Turnstile 正在检查用户环境！');
+      showInfo('Please try again in a few seconds. Turnstile is checking your environment!');
       return;
     }
     setSubmitted(true);
@@ -247,11 +247,11 @@ const LoginForm = () => {
           userDispatch({ type: 'login', payload: data });
           setUserData(data);
           updateAPI();
-          showSuccess('登录成功！');
+          showSuccess('Login successful!');
           if (username === 'root' && password === '123456') {
             Modal.error({
-              title: '您正在使用默认密码！',
-              content: '请立刻修改默认密码！',
+              title: 'You are using the default password!',
+              content: 'Please change the default password immediately!',
               centered: true,
             });
           }
@@ -260,10 +260,10 @@ const LoginForm = () => {
           showError(message);
         }
       } else {
-        showError('请输入用户名和密码！');
+        showError('Please enter your username and password!');
       }
     } catch (error) {
-      showError('登录失败，请重试');
+      showError('Login failed. Please try again');
     } finally {
       setLoginLoading(false);
     }
@@ -297,7 +297,7 @@ const LoginForm = () => {
       if (success) {
         userDispatch({ type: 'login', payload: data });
         localStorage.setItem('user', JSON.stringify(data));
-        showSuccess('登录成功！');
+        showSuccess('Login successful!');
         setUserData(data);
         updateAPI();
         navigate('/');
@@ -305,7 +305,7 @@ const LoginForm = () => {
         showError(message);
       }
     } catch (error) {
-      showError('登录失败，请重试');
+      showError('Login failed. Please try again');
     }
   };
 
@@ -417,11 +417,11 @@ const LoginForm = () => {
       return;
     }
     if (!passkeySupported) {
-      showInfo('当前环境无法使用 Passkey 登录');
+      showInfo('Passkey login is not available in the current environment');
       return;
     }
     if (!window.PublicKeyCredential) {
-      showInfo('当前浏览器不支持 Passkey');
+      showInfo('The current browser does not support Passkey');
       return;
     }
 
@@ -430,7 +430,7 @@ const LoginForm = () => {
       const beginRes = await API.post('/api/user/passkey/login/begin');
       const { success, message, data } = beginRes.data;
       if (!success) {
-        showError(message || '无法发起 Passkey 登录');
+        showError(message || 'Unable to start Passkey login');
         return;
       }
 
@@ -442,7 +442,7 @@ const LoginForm = () => {
       });
       const payload = buildAssertionResult(assertion);
       if (!payload) {
-        showError('Passkey 验证失败，请重试');
+        showError('Passkey verification failed. Please try again');
         return;
       }
 
@@ -455,16 +455,16 @@ const LoginForm = () => {
         userDispatch({ type: 'login', payload: finish.data });
         setUserData(finish.data);
         updateAPI();
-        showSuccess('登录成功！');
+        showSuccess('Login successful!');
         navigate('/console');
       } else {
-        showError(finish.message || 'Passkey 登录失败，请重试');
+        showError(finish.message || 'Passkey login failed. Please try again');
       }
     } catch (error) {
       if (error?.name === 'AbortError') {
-        showInfo('已取消 Passkey 登录');
+        showInfo('Passkey login canceled');
       } else {
-        showError('Passkey 登录失败，请重试');
+        showError('Passkey login failed. Please try again');
       }
     } finally {
       setPasskeyLoading(false);
@@ -490,7 +490,7 @@ const LoginForm = () => {
     userDispatch({ type: 'login', payload: data });
     setUserData(data);
     updateAPI();
-    showSuccess('登录成功！');
+    showSuccess('Login successful!');
     navigate('/console');
   };
 

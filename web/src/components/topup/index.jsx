@@ -269,7 +269,7 @@ const TopUp = () => {
     }
 
     if (topUpCount < minTopUp) {
-      showError('充值数量不能小于' + minTopUp);
+      showError('Top-up amount cannot be less than ' + minTopUp);
       return;
     }
     setConfirmLoading(true);
@@ -426,7 +426,7 @@ const TopUp = () => {
           setAmount(parseFloat(data));
         } else {
           setAmount(0);
-          Toast.error({ content: '错误：' + data, id: 'getAmount' });
+          Toast.error({ content: 'Error: ' + data, id: 'getAmount' });
         }
       } else {
         showError(res);
@@ -489,7 +489,7 @@ const TopUp = () => {
           setAmount(parseFloat(data));
         } else {
           setAmount(0);
-          Toast.error({ content: '错误：' + data, id: 'getAmount' });
+          Toast.error({ content: 'Error: ' + data, id: 'getAmount' });
         }
       } else {
         showError(res);
@@ -790,7 +790,7 @@ const TopUp = () => {
           setAmount(parseFloat(data));
         } else {
           setAmount(0);
-          Toast.error({ content: '错误：' + data, id: 'getAmount' });
+          Toast.error({ content: 'Error: ' + data, id: 'getAmount' });
         }
       } else {
         showError(res);
@@ -816,7 +816,7 @@ const TopUp = () => {
           setAmount(parseFloat(data));
         } else {
           setAmount(0);
-          Toast.error({ content: '错误：' + data, id: 'getAmount' });
+          Toast.error({ content: 'Error: ' + data, id: 'getAmount' });
         }
       } else {
         showError(res);

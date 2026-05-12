@@ -145,7 +145,7 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
     });
     const { success, message } = res.data;
     if (success) {
-      showSuccess('Uptime Kuma配置已更新');
+      showSuccess('Uptime Kuma configuration updated');
       if (refresh) refresh();
     } else {
       showError(message);
@@ -160,7 +160,7 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
       setHasChanges(false);
     } catch (error) {
       console.error('Uptime Kuma配置更新失败', error);
-      showError('Uptime Kuma配置更新失败');
+      showError('Failed to update Uptime Kuma configuration');
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
       );
       setUptimeGroupsList(newList);
       setHasChanges(true);
-      showSuccess('分类已删除，请及时点击“保存设置”进行保存');
+      showSuccess('Category deleted. Click "Save Settings" to save your changes');
     }
     setShowDeleteModal(false);
     setDeletingGroup(null);
@@ -206,19 +206,19 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
 
   const handleSaveGroup = async () => {
     if (!uptimeForm.categoryName || !uptimeForm.url || !uptimeForm.slug) {
-      showError('请填写完整的分类信息');
+      showError('Please fill in the complete category information');
       return;
     }
 
     try {
       new URL(uptimeForm.url);
     } catch (error) {
-      showError('请输入有效的URL地址');
+      showError('Please enter a valid URL');
       return;
     }
 
     if (!/^[a-zA-Z0-9_-]+$/.test(uptimeForm.slug)) {
-      showError('Slug只能包含字母、数字、下划线和连字符');
+      showError('Slug can only contain letters, numbers, underscores, and hyphens');
       return;
     }
 
@@ -249,7 +249,7 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
           : '分类已添加，请及时点击“保存设置”进行保存',
       );
     } catch (error) {
-      showError('操作失败: ' + error.message);
+      showError('Operation failed: ' + error.message);
     } finally {
       setModalLoading(false);
     }
@@ -312,7 +312,7 @@ const SettingsUptimeKuma = ({ options, refresh }) => {
 
   const handleBatchDelete = () => {
     if (selectedRowKeys.length === 0) {
-      showError('请先选择要删除的分类');
+      showError('Please select a category to delete first');
       return;
     }
 

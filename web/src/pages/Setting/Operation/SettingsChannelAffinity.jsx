@@ -657,14 +657,14 @@ export default function SettingsChannelAffinity(props) {
 
   const validateKeySources = (keySources) => {
     const xs = (keySources || []).map(normalizeKeySource).filter((x) => x.type);
-    if (xs.length === 0) return { ok: false, message: 'Key 来源不能为空' };
+    if (xs.length === 0) return { ok: false, message: 'Key source cannot be empty' };
     for (const x of xs) {
       if (x.type === 'context_int' || x.type === 'context_string') {
-        if (!x.key) return { ok: false, message: 'Key 不能为空' };
+        if (!x.key) return { ok: false, message: 'Key cannot be empty' };
       } else if (x.type === 'gjson') {
-        if (!x.path) return { ok: false, message: 'Path 不能为空' };
+        if (!x.path) return { ok: false, message: 'Path cannot be empty' };
       } else {
-        return { ok: false, message: 'Key 来源类型不合法' };
+        return { ok: false, message: 'Invalid key source type' };
       }
     }
     return { ok: true, value: xs };

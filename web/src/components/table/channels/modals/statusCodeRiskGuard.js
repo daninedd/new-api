@@ -1,7 +1,7 @@
 const NON_REDIRECTABLE_STATUS_CODES = new Set([504, 524]);
 
 export const STATUS_CODE_RISK_I18N_KEYS = {
-  title: '高危操作确认',
+  title: 'High-risk operation confirmation',
   detailTitle: '检测到以下高危状态码重定向规则',
   inputPrompt: '操作确认',
   confirmButton: '我确认开启高危重试',

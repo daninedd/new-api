@@ -600,7 +600,7 @@ const EditChannelModal = (props) => {
 
     if (name === 'base_url' && value.endsWith('/v1')) {
       Modal.confirm({
-        title: '警告',
+        title: 'Warning',
         content:
           '不需要在末尾加/v1，New API会自动处理，添加后可能导致请求失败，是否继续？',
         onOk: () => {

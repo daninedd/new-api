@@ -445,7 +445,7 @@ const FIELD_GUIDE_TARGET_OPTIONS = [
 
 const BUILTIN_FIELD_SECTIONS = [
   {
-    title: '常用请求字段',
+    title: 'Common request fields',
     fields: [
       {
         key: 'model',
@@ -458,7 +458,7 @@ const BUILTIN_FIELD_SECTIONS = [
     ],
   },
   {
-    title: '上下文字段',
+    title: 'Context fields',
     fields: [
       { key: 'retry.is_retry', label: '是否重试', tip: 'true 表示重试请求' },
       { key: 'last_error.code', label: '上次错误码', tip: '配合重试策略使用' },
@@ -470,7 +470,7 @@ const BUILTIN_FIELD_SECTIONS = [
     ],
   },
   {
-    title: '请求头映射字段',
+    title: 'Header mapping fields',
     fields: [
       {
         key: 'header_override_normalized.authorization',
