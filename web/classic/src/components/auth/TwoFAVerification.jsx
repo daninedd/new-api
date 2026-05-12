@@ -36,15 +36,15 @@ const TwoFAVerification = ({ onSuccess, onBack, isModal = false }) => {
 
   const handleSubmit = async () => {
     if (!verificationCode) {
-      showError('请输入验证码');
+      showError('Please enter the verification code');
       return;
     }
     // Validate code format
     if (useBackupCode && verificationCode.length !== 8) {
-      showError('备用码必须是8位');
+      showError('Backup code must be 8 characters');
       return;
     } else if (!useBackupCode && !/^\d{6}$/.test(verificationCode)) {
-      showError('验证码必须是6位数字');
+      showError('Verification code must be 6 digits');
       return;
     }
 
@@ -55,7 +55,7 @@ const TwoFAVerification = ({ onSuccess, onBack, isModal = false }) => {
       });
 
       if (res.data.success) {
-        showSuccess('登录成功');
+        showSuccess('Login successful');
         // 保存用户信息到本地存储
         localStorage.setItem('user', JSON.stringify(res.data.data));
         if (onSuccess) {
@@ -65,7 +65,7 @@ const TwoFAVerification = ({ onSuccess, onBack, isModal = false }) => {
         showError(res.data.message);
       }
     } catch (error) {
-      showError('验证失败，请重试');
+      showError('Verification failed. Please try again');
     } finally {
       setLoading(false);
     }

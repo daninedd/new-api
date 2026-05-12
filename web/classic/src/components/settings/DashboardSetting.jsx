@@ -77,7 +77,7 @@ const DashboardSetting = () => {
       setLoading(true);
       await getOptions();
     } catch (error) {
-      showError('刷新失败');
+      showError('Refresh failed');
       console.error(error);
     } finally {
       setLoading(false);
@@ -110,12 +110,12 @@ const DashboardSetting = () => {
     try {
       setLoading(true);
       await API.post('/api/option/migrate_console_setting');
-      showSuccess('旧配置迁移完成');
+      showSuccess('Legacy configuration migration completed');
       await onRefresh();
       setShowMigrateModal(false);
     } catch (err) {
       console.error(err);
-      showError('迁移失败: ' + (err.message || '未知错误'));
+      showError('Migration failed: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
