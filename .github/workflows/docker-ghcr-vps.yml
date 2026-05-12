@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64
 
 jobs:
   docker:
