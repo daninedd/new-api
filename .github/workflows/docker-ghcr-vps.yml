@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - custom/v1.0.0-rc.5
     tags:
       - 'v*'
   workflow_dispatch:
@@ -52,7 +53,7 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref_name == github.event.repository.default_branch || github.ref_name == 'custom/v1.0.0-rc.5' }}
             type=ref,event=branch
             type=ref,event=tag
             type=sha,prefix=sha-
@@ -79,7 +80,7 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: docker
-    if: github.ref_name == github.event.repository.default_branch
+    if: github.ref_name == github.event.repository.default_branch || github.ref_name == 'custom/v1.0.0-rc.5'
     env:
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_PORT: ${{ secrets.VPS_PORT }}
