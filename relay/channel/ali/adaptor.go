@@ -65,16 +65,6 @@ func isSyncImageModel(modelName string) bool {
 	return model_setting.IsSyncImageModel(modelName)
 }
 
-func aliImageModelName(info *relaycommon.RelayInfo) string {
-	if info == nil {
-		return ""
-	}
-	if info.UpstreamModelName != "" {
-		return info.UpstreamModelName
-	}
-	return info.OriginModelName
-}
-
 func (a *Adaptor) ConvertGeminiRequest(*gin.Context, *relaycommon.RelayInfo, *dto.GeminiChatRequest) (any, error) {
 	//TODO implement me
 	return nil, errors.New("not implemented")
@@ -116,16 +106,15 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 		case constant.RelayModeResponses:
 			fullRequestURL = fmt.Sprintf("%s/api/v2/apps/protocols/compatible-mode/v1/responses", info.ChannelBaseUrl)
 		case constant.RelayModeImagesGenerations:
-			if isSyncImageModel(aliImageModelName(info)) {
+			if isSyncImageModel(info.OriginModelName) {
 				fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/multimodal-generation/generation", info.ChannelBaseUrl)
 			} else {
 				fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/text2image/image-synthesis", info.ChannelBaseUrl)
 			}
 		case constant.RelayModeImagesEdits:
-			imageModelName := aliImageModelName(info)
-			if isOldWanModel(imageModelName) {
+			if isOldWanModel(info.OriginModelName) {
 				fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/image2image/image-synthesis", info.ChannelBaseUrl)
-			} else if isWanModel(imageModelName) {
+			} else if isWanModel(info.OriginModelName) {
 				fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/image-generation/generation", info.ChannelBaseUrl)
 			} else {
 				fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/multimodal-generation/generation", info.ChannelBaseUrl)
@@ -150,12 +139,14 @@ func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *rel
 		req.Set("X-DashScope-Plugin", c.GetString("plugin"))
 	}
 	if info.RelayMode == constant.RelayModeImagesGenerations {
-		if !isSyncImageModel(aliImageModelName(info)) {
+		if isSyncImageModel(info.OriginModelName) {
+
+		} else {
 			req.Set("X-DashScope-Async", "enable")
 		}
 	}
 	if info.RelayMode == constant.RelayModeImagesEdits {
-		if isWanModel(aliImageModelName(info)) {
+		if isWanModel(info.OriginModelName) {
 			req.Set("X-DashScope-Async", "enable")
 		}
 		req.Set("Content-Type", "application/json")
@@ -187,9 +178,8 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 }
 
 func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.ImageRequest) (any, error) {
-	imageModelName := aliImageModelName(info)
 	if info.RelayMode == constant.RelayModeImagesGenerations {
-		if isSyncImageModel(imageModelName) {
+		if isSyncImageModel(info.OriginModelName) {
 			a.IsSyncImageModel = true
 		}
 		aliRequest, err := oaiImage2AliImageRequest(info, request, a.IsSyncImageModel)
@@ -198,11 +188,11 @@ func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInf
 		}
 		return aliRequest, nil
 	} else if info.RelayMode == constant.RelayModeImagesEdits {
-		if isOldWanModel(imageModelName) {
+		if isOldWanModel(info.OriginModelName) {
 			return oaiFormEdit2WanxImageEdit(c, info, request)
 		}
-		if isSyncImageModel(imageModelName) {
-			if isWanModel(imageModelName) {
+		if isSyncImageModel(info.OriginModelName) {
+			if isWanModel(info.OriginModelName) {
 				a.IsSyncImageModel = false
 			} else {
 				a.IsSyncImageModel = true
