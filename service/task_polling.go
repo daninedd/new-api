@@ -49,8 +49,8 @@ func sweepTimedOutTasks(ctx context.Context) {
 	}
 
 	const legacyTaskCutoff int64 = 1740182400 // 2026-02-22 00:00:00 UTC
-	reason := fmt.Sprintf("任务超时（%d分钟）", constant.TaskTimeoutMinutes)
-	legacyReason := "任务超时（旧系统遗留任务，不进行退款，请联系管理员）"
+	reason := fmt.Sprintf("Task timed out (%d minutes)", constant.TaskTimeoutMinutes)
+	legacyReason := "Task timed out (legacy task from the old system; no refund will be issued, please contact the administrator)"
 	now := time.Now().Unix()
 	timedOutCount := 0
 
@@ -178,7 +178,7 @@ func updateSunoTasks(ctx context.Context, channelId int, taskIds []string, taskM
 			}
 		}
 		err = model.TaskBulkUpdateByID(failedIDs, map[string]any{
-			"fail_reason": fmt.Sprintf("获取渠道信息失败，请联系管理员，渠道ID：%d", channelId),
+			"fail_reason": fmt.Sprintf("Failed to get channel information. Please contact the administrator. Channel ID: %d", channelId),
 			"status":      "FAILURE",
 			"progress":    "100%",
 		})
@@ -548,7 +548,7 @@ func settleTaskBillingOnComplete(ctx context.Context, adaptor TaskPollingAdaptor
 	}
 	// 1. 优先让 adaptor 决定最终额度
 	if actualQuota := adaptor.AdjustBillingOnComplete(task, taskResult); actualQuota > 0 {
-		RecalculateTaskQuota(ctx, task, actualQuota, "adaptor计费调整")
+		RecalculateTaskQuota(ctx, task, actualQuota, "adaptor billing adjustment")
 		return
 	}
 	// 2. 回退到 token 重算

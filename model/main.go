@@ -593,7 +593,7 @@ func checkMySQLChineseSupport(db *gorm.DB) error {
 	var schemaCharset, schemaCollation string
 	err := db.Raw("SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE()").Row().Scan(&schemaCharset, &schemaCollation)
 	if err != nil {
-		return fmt.Errorf("读取当前库默认字符集/排序规则失败 / Failed to read schema default charset/collation: %v", err)
+		return fmt.Errorf("Failed to read schema default charset/collation: %v", err)
 	}
 
 	toLower := func(s string) string { return strings.ToLower(s) }

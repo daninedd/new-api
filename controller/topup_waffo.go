@@ -102,26 +102,26 @@ type WaffoPayRequest struct {
 func RequestWaffoAmount(c *gin.Context) {
 	var req WaffoPayRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Invalid parameters"})
 		return
 	}
 
 	waffoMinTopup := int64(setting.WaffoMinTopUp)
 	if req.Amount < waffoMinTopup {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", waffoMinTopup)})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("Top-up amount cannot be less than %d", waffoMinTopup)})
 		return
 	}
 
 	id := c.GetInt("id")
 	group, err := model.GetUserGroup(id, true)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "获取用户分组失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to get user group"})
 		return
 	}
 
 	payMoney := getWaffoPayMoney(float64(req.Amount), group)
 	if payMoney <= 0.01 {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Top-up amount is too low"})
 		return
 	}
 
@@ -131,25 +131,25 @@ func RequestWaffoAmount(c *gin.Context) {
 // RequestWaffoPay 创建 Waffo 支付订单
 func RequestWaffoPay(c *gin.Context) {
 	if !setting.WaffoEnabled {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo 支付未启用"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Waffo payment is not enabled"})
 		return
 	}
 
 	var req WaffoPayRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Invalid parameters"})
 		return
 	}
 	waffoMinTopup := int64(setting.WaffoMinTopUp)
 	if req.Amount < waffoMinTopup {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", waffoMinTopup)})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("Top-up amount cannot be less than %d", waffoMinTopup)})
 		return
 	}
 
 	id := c.GetInt("id")
 	user, err := model.GetUserById(id, false)
 	if err != nil || user == nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "用户不存在"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "User does not exist"})
 		return
 	}
 
@@ -161,7 +161,7 @@ func RequestWaffoPay(c *gin.Context) {
 		idx := *req.PayMethodIndex
 		if idx < 0 || idx >= len(methods) {
 			logger.LogWarn(c.Request.Context(), fmt.Sprintf("Waffo 支付方式索引无效 user_id=%d pay_method_index=%d method_count=%d", id, idx, len(methods)))
-			c.JSON(http.StatusOK, gin.H{"message": "error", "data": "不支持的支付方式"})
+			c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Unsupported payment method"})
 			return
 		}
 		resolvedPayMethodType = methods[idx].PayMethodType
@@ -179,7 +179,7 @@ func RequestWaffoPay(c *gin.Context) {
 		}
 		if !valid {
 			logger.LogWarn(c.Request.Context(), fmt.Sprintf("Waffo 支付方式无效 user_id=%d pay_method_type=%s pay_method_name=%q", id, req.PayMethodType, req.PayMethodName))
-			c.JSON(http.StatusOK, gin.H{"message": "error", "data": "不支持的支付方式"})
+			c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Unsupported payment method"})
 			return
 		}
 	}
@@ -188,7 +188,7 @@ func RequestWaffoPay(c *gin.Context) {
 	group, _ := model.GetUserGroup(id, true)
 	payMoney := getWaffoPayMoney(float64(req.Amount), group)
 	if payMoney < 0.01 {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Top-up amount is too low"})
 		return
 	}
 
@@ -218,7 +218,7 @@ func RequestWaffoPay(c *gin.Context) {
 	}
 	if err := topUp.Insert(); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 创建充值订单失败 user_id=%d trade_no=%s amount=%d error=%q", id, merchantOrderId, req.Amount, err.Error()))
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "创建订单失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to create order"})
 		return
 	}
 
@@ -227,7 +227,7 @@ func RequestWaffoPay(c *gin.Context) {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo SDK 初始化失败 user_id=%d trade_no=%s error=%q", id, merchantOrderId, err.Error()))
 		topUp.Status = common.TopUpStatusFailed
 		_ = topUp.Update()
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "支付配置错误"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Payment configuration error"})
 		return
 	}
 
@@ -268,22 +268,22 @@ func RequestWaffoPay(c *gin.Context) {
 	}
 	resp, err := sdk.Order().Create(c.Request.Context(), createParams, nil)
 	if err != nil {
-		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo 创建订单失败 user_id=%d trade_no=%s error=%q", id, merchantOrderId, err.Error()))
+		logger.LogError(c.Request.Context(), fmt.Sprintf("Waffo Failed to create order user_id=%d trade_no=%s error=%q", id, merchantOrderId, err.Error()))
 		topUp.Status = common.TopUpStatusFailed
 		_ = topUp.Update()
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to start payment"})
 		return
 	}
 	if !resp.IsSuccess() {
 		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Waffo 创建订单业务失败 user_id=%d trade_no=%s code=%s message=%q response=%q", id, merchantOrderId, resp.Code, resp.Message, common.GetJsonString(resp)))
 		topUp.Status = common.TopUpStatusFailed
 		_ = topUp.Update()
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to start payment"})
 		return
 	}
 
 	orderData := resp.GetData()
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo 充值订单创建成功 user_id=%d trade_no=%s amount=%d money=%.2f pay_method_type=%s pay_method_name=%q", id, merchantOrderId, req.Amount, payMoney, resolvedPayMethodType, resolvedPayMethodName))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Waffo top-up order created successfully user_id=%d trade_no=%s amount=%d money=%.2f pay_method_type=%s pay_method_name=%q", id, merchantOrderId, req.Amount, payMoney, resolvedPayMethodType, resolvedPayMethodName))
 
 	paymentUrl := orderData.FetchRedirectURL()
 	if paymentUrl == "" {

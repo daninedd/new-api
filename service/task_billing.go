@@ -18,10 +18,10 @@ import (
 // 实际扣费已由 BillingSession（PreConsumeBilling + SettleBilling）完成。
 func LogTaskConsumption(c *gin.Context, info *relaycommon.RelayInfo) {
 	tokenName := c.GetString("token_name")
-	logContent := fmt.Sprintf("操作 %s", info.Action)
+	logContent := fmt.Sprintf("operation %s", info.Action)
 	// 支持任务仅按次计费
 	if common.StringsContains(constant.TaskPricePatches, info.OriginModelName) {
-		logContent = fmt.Sprintf("%s，按次计费", logContent)
+		logContent = fmt.Sprintf("%s, billed per request", logContent)
 	} else {
 		if len(info.PriceData.OtherRatios) > 0 {
 			var contents []string
@@ -31,7 +31,7 @@ func LogTaskConsumption(c *gin.Context, info *relaycommon.RelayInfo) {
 				}
 			}
 			if len(contents) > 0 {
-				logContent = fmt.Sprintf("%s, 计算参数：%s", logContent, strings.Join(contents, ", "))
+				logContent = fmt.Sprintf("%s, calculation parameters: %s", logContent, strings.Join(contents, ", "))
 			}
 		}
 	}
@@ -192,12 +192,12 @@ func RecalculateTaskQuota(ctx context.Context, task *model.Task, actualQuota int
 	quotaDelta := actualQuota - preConsumedQuota
 
 	if quotaDelta == 0 {
-		logger.LogInfo(ctx, fmt.Sprintf("任务 %s 预扣费准确（%s，%s）",
+		logger.LogInfo(ctx, fmt.Sprintf("Task %s pre-consume was accurate (%s, %s)",
 			task.TaskID, logger.LogQuota(actualQuota), reason))
 		return
 	}
 
-	logger.LogInfo(ctx, fmt.Sprintf("任务 %s 差额结算：delta=%s（实际：%s，预扣：%s，%s）",
+	logger.LogInfo(ctx, fmt.Sprintf("Task %s delta settlement: delta=%s (actual: %s, pre-consumed: %s, %s)",
 		task.TaskID,
 		logger.LogQuota(quotaDelta),
 		logger.LogQuota(actualQuota),
@@ -296,6 +296,6 @@ func RecalculateTaskQuotaByTokens(ctx context.Context, task *model.Task, totalTo
 	// 计算实际应扣费额度: totalTokens * modelRatio * groupRatio * otherMultiplier
 	actualQuota := int(float64(totalTokens) * modelRatio * finalGroupRatio * otherMultiplier)
 
-	reason := fmt.Sprintf("token重算：tokens=%d, modelRatio=%.2f, groupRatio=%.2f, otherMultiplier=%.4f", totalTokens, modelRatio, finalGroupRatio, otherMultiplier)
+	reason := fmt.Sprintf("token recalculation: tokens=%d, modelRatio=%.2f, groupRatio=%.2f, otherMultiplier=%.4f", totalTokens, modelRatio, finalGroupRatio, otherMultiplier)
 	RecalculateTaskQuota(ctx, task, actualQuota, reason)
 }

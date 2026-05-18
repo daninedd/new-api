@@ -68,7 +68,7 @@ func UpdateMidjourneyTaskBulk() {
 			if err != nil {
 				logger.LogError(ctx, fmt.Sprintf("CacheGetChannel: %v", err))
 				err := model.MjBulkUpdate(taskIds, map[string]any{
-					"fail_reason": fmt.Sprintf("获取渠道信息失败，请联系管理员，渠道ID：%d", channelId),
+					"fail_reason": fmt.Sprintf("Failed to get channel information. Please contact the administrator. Channel ID: %d", channelId),
 					"status":      "FAILURE",
 					"progress":    "100%",
 				})

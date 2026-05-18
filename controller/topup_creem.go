@@ -9,13 +9,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting"
-	"io"
-	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thanhpk/randstr"
@@ -65,12 +66,12 @@ type CreemAdaptor struct {
 
 func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 	if req.PaymentMethod != model.PaymentMethodCreem {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "不支持的支付渠道"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Unsupported payment provider"})
 		return
 	}
 
 	if req.ProductId == "" {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "请选择产品"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Please select a product"})
 		return
 	}
 
@@ -79,7 +80,7 @@ func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 	err := json.Unmarshal([]byte(setting.CreemProducts), &products)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 产品配置解析失败 user_id=%d error=%q", c.GetInt("id"), err.Error()))
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "产品配置错误"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Product configuration error"})
 		return
 	}
 
@@ -93,7 +94,7 @@ func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 	}
 
 	if selectedProduct == nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "产品不存在"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Product does not exist"})
 		return
 	}
 
@@ -118,7 +119,7 @@ func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 	err = topUp.Insert()
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 创建充值订单失败 user_id=%d trade_no=%s product_id=%s error=%q", id, referenceId, selectedProduct.ProductId, err.Error()))
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "创建订单失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to create order"})
 		return
 	}
 
@@ -126,11 +127,11 @@ func (*CreemAdaptor) RequestPay(c *gin.Context, req *CreemPayRequest) {
 	checkoutUrl, err := genCreemLink(c.Request.Context(), referenceId, selectedProduct, user.Email, user.Username)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Creem 创建支付链接失败 user_id=%d trade_no=%s product_id=%s error=%q", id, referenceId, selectedProduct.ProductId, err.Error()))
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Failed to start payment"})
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem 充值订单创建成功 user_id=%d trade_no=%s product_id=%s product_name=%q quota=%d money=%.2f", id, referenceId, selectedProduct.ProductId, selectedProduct.Name, selectedProduct.Quota, selectedProduct.Price))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("Creem top-up order created successfully user_id=%d trade_no=%s product_id=%s product_name=%q quota=%d money=%.2f", id, referenceId, selectedProduct.ProductId, selectedProduct.Name, selectedProduct.Quota, selectedProduct.Price))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
@@ -159,7 +160,7 @@ func RequestCreemPay(c *gin.Context) {
 
 	err = c.ShouldBindJSON(&req)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "参数错误"})
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "Invalid parameters"})
 		return
 	}
 	creemAdaptor.RequestPay(c, &req)
@@ -324,7 +325,7 @@ func handleCheckoutCompleted(c *gin.Context, event *CreemWebhookEvent) {
 	// 查询本地订单确认存在
 	topUp := model.GetTopUpByTradeNo(referenceId)
 	if topUp == nil {
-		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem 充值订单不存在 trade_no=%s creem_order_id=%s", referenceId, event.Object.Order.Id))
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("Creem Top-up order does not exist trade_no=%s creem_order_id=%s", referenceId, event.Object.Order.Id))
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -374,7 +375,7 @@ type CreemCheckoutResponse struct {
 
 func genCreemLink(ctx context.Context, referenceId string, product *CreemProduct, email string, username string) (string, error) {
 	if setting.CreemApiKey == "" {
-		return "", fmt.Errorf("未配置Creem API密钥")
+		return "", fmt.Errorf("Creem API key is not configured")
 	}
 
 	// 根据测试模式选择 API 端点
@@ -404,20 +405,20 @@ func genCreemLink(ctx context.Context, referenceId string, product *CreemProduct
 	// 序列化请求数据
 	jsonData, err := json.Marshal(requestData)
 	if err != nil {
-		return "", fmt.Errorf("序列化请求数据失败: %v", err)
+		return "", fmt.Errorf("failed to serialize request data: %v", err)
 	}
 
 	// 创建 HTTP 请求
 	req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return "", fmt.Errorf("创建HTTP请求失败: %v", err)
+		return "", fmt.Errorf("failed to create HTTP request: %v", err)
 	}
 
 	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-api-key", setting.CreemApiKey)
 
-	logger.LogInfo(ctx, fmt.Sprintf("Creem 支付请求已发送 api_url=%s product_id=%s email=%q trade_no=%s", apiUrl, product.ProductId, email, referenceId))
+	logger.LogInfo(ctx, fmt.Sprintf("Creem payment request sent api_url=%s product_id=%s email=%q trade_no=%s", apiUrl, product.ProductId, email, referenceId))
 
 	// 发送请求
 	client := &http.Client{
@@ -425,17 +426,17 @@ func genCreemLink(ctx context.Context, referenceId string, product *CreemProduct
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("发送HTTP请求失败: %v", err)
+		return "", fmt.Errorf("failed to send HTTP request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// 读取响应
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("读取响应失败: %v", err)
+		return "", fmt.Errorf("Failed to read response: %v", err)
 	}
 
-	logger.LogInfo(ctx, fmt.Sprintf("Creem API 响应已收到 trade_no=%s status_code=%d body=%q", referenceId, resp.StatusCode, string(body)))
+	logger.LogInfo(ctx, fmt.Sprintf("Creem API response received trade_no=%s status_code=%d body=%q", referenceId, resp.StatusCode, string(body)))
 
 	// 检查响应状态
 	if resp.StatusCode/100 != 2 {
@@ -445,13 +446,13 @@ func genCreemLink(ctx context.Context, referenceId string, product *CreemProduct
 	var checkoutResp CreemCheckoutResponse
 	err = json.Unmarshal(body, &checkoutResp)
 	if err != nil {
-		return "", fmt.Errorf("解析响应失败: %v", err)
+		return "", fmt.Errorf("Failed to parse response: %v", err)
 	}
 
 	if checkoutResp.CheckoutUrl == "" {
 		return "", fmt.Errorf("Creem API resp no checkout url ")
 	}
 
-	logger.LogInfo(ctx, fmt.Sprintf("Creem 支付链接创建成功 trade_no=%s response_id=%s checkout_url=%q", referenceId, checkoutResp.Id, checkoutResp.CheckoutUrl))
+	logger.LogInfo(ctx, fmt.Sprintf("Creem payment link created successfully trade_no=%s response_id=%s checkout_url=%q", referenceId, checkoutResp.Id, checkoutResp.CheckoutUrl))
 	return checkoutResp.CheckoutUrl, nil
 }

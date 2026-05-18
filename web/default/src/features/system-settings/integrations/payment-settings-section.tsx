@@ -833,9 +833,7 @@ export function PaymentSettingsSection({
                     ) : (
                       <Textarea
                         rows={4}
-                        placeholder={t(
-                          '[{"name":"支付宝","type":"alipay","color":"#1677FF"}]'
-                        )}
+                        placeholder='[{"name":"Alipay","type":"alipay","color":"#1677FF"}]'
                         {...field}
                         onChange={(event) => field.onChange(event.target.value)}
                       />
