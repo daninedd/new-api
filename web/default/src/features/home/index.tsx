@@ -56,6 +56,7 @@ export function Home() {
             </div>
           )}
         </main>
+        <Footer />
       </PublicLayout>
     )
   }
