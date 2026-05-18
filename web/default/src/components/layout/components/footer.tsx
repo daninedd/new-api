@@ -130,6 +130,22 @@ function LegalLinks() {
   )
 }
 
+function ContactLink() {
+  const { t } = useTranslation()
+
+  return (
+    <p className='text-muted-foreground/60 text-xs'>
+      {t('footer.columns.about.links.contact')}:{' '}
+      <a
+        href='mailto:support@all-llms.com'
+        className='hover:text-foreground transition-colors'
+      >
+        support@all-llms.com
+      </a>
+    </p>
+  )
+}
+
 export function Footer(props: FooterProps) {
   const { t } = useTranslation()
   const {
@@ -218,6 +234,7 @@ export function Footer(props: FooterProps) {
               dangerouslySetInnerHTML={{ __html: footerHtml }}
             />
             <LegalLinks />
+            <ContactLink />
             <div className='border-border/60 w-full border-t pt-4 sm:w-auto sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5'>
               <ProjectAttribution currentYear={currentYear} />
             </div>
@@ -279,6 +296,7 @@ export function Footer(props: FooterProps) {
               {props.copyright ?? t('footer.defaultCopyright')}
             </p>
             <LegalLinks />
+            <ContactLink />
           </div>
           <ProjectAttribution currentYear={currentYear} />
         </div>
