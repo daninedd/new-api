@@ -77,6 +77,8 @@ const (
 	ErrorCodeAwsInvokeError         ErrorCode = "aws_invoke_error"
 	ErrorCodeModelNotFound          ErrorCode = "model_not_found"
 	ErrorCodePromptBlocked          ErrorCode = "prompt_blocked"
+	ErrorCodePromptRejected         ErrorCode = "prompt_rejected"
+	ErrorCodeModerationUnavailable  ErrorCode = "moderation_unavailable"
 
 	// sql error
 	ErrorCodeQueryDataError  ErrorCode = "query_data_error"

@@ -157,6 +157,11 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 	if taskErr := adaptor.ValidateRequestAndSetAction(c, info); taskErr != nil {
 		return nil, taskErr
 	}
+	if req, err := relaycommon.GetTaskRequest(c); err == nil && strings.TrimSpace(req.Prompt) != "" {
+		if moderationErr := service.ModeratePromptWithCreem(c.Request.Context(), req.Prompt, taskCreemModerationExternalID(c, info)); moderationErr != nil {
+			return nil, service.TaskErrorWrapperLocal(moderationErr, moderationErr.Code, moderationErr.StatusCode)
+		}
+	}
 
 	// 2. 确定模型名称
 	modelName := info.OriginModelName
@@ -255,6 +260,18 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 		Platform:       platform,
 		Quota:          finalQuota,
 	}, nil
+}
+
+func taskCreemModerationExternalID(c *gin.Context, info *relaycommon.RelayInfo) string {
+	userID := 0
+	if info != nil {
+		userID = info.UserId
+	}
+	requestID := c.GetString(common.RequestIdKey)
+	if requestID == "" {
+		return fmt.Sprintf("user_%d", userID)
+	}
+	return fmt.Sprintf("user_%d:req_%s", userID, requestID)
 }
 
 // recalcQuotaFromRatios 根据 adjustedRatios 重新计算 quota。

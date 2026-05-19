@@ -489,6 +489,12 @@ func RelayMidjourneySubmit(c *gin.Context, relayInfo *relaycommon.RelayInfo) *dt
 		consumeQuota = false
 	}
 
+	if strings.TrimSpace(midjRequest.Prompt) != "" {
+		if moderationErr := service.ModeratePromptWithCreem(c.Request.Context(), midjRequest.Prompt, mjCreemModerationExternalID(c, relayInfo)); moderationErr != nil {
+			return service.MidjourneyErrorWrapper(constant.MjRequestError, moderationErr.Message)
+		}
+	}
+
 	//baseURL := common.ChannelBaseURLs[channelType]
 	requestURL := getMjRequestPath(c.Request.URL.String())
 
@@ -658,6 +664,18 @@ func RelayMidjourneySubmit(c *gin.Context, relayInfo *relaycommon.RelayInfo) *dt
 		}
 	}
 	return nil
+}
+
+func mjCreemModerationExternalID(c *gin.Context, info *relaycommon.RelayInfo) string {
+	userID := 0
+	if info != nil {
+		userID = info.UserId
+	}
+	requestID := c.GetString(common.RequestIdKey)
+	if requestID == "" {
+		return fmt.Sprintf("user_%d", userID)
+	}
+	return fmt.Sprintf("user_%d:req_%s", userID, requestID)
 }
 
 type taskChangeParams struct {

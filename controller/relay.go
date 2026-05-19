@@ -123,6 +123,24 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		return
 	}
 
+	if shouldModeratePromptForRelay(relayInfo) {
+		prompt := creemModerationPromptForRelay(request, relayInfo)
+		if moderationErr := service.ModeratePromptWithCreem(c.Request.Context(), prompt, creemModerationExternalID(c, relayInfo)); moderationErr != nil {
+			errorCode := types.ErrorCodeModerationUnavailable
+			if moderationErr.Code == "prompt_rejected" {
+				errorCode = types.ErrorCodePromptRejected
+			}
+			newAPIError = types.NewErrorWithStatusCode(
+				moderationErr,
+				errorCode,
+				moderationErr.StatusCode,
+				types.ErrOptionWithSkipRetry(),
+				types.ErrOptionWithNoRecordErrorLog(),
+			)
+			return
+		}
+	}
+
 	needSensitiveCheck := setting.ShouldCheckPromptSensitive()
 	needCountToken := constant.CountToken
 	// Avoid building huge CombineText (strings.Join) when token counting and sensitive check are both disabled.
@@ -258,6 +276,73 @@ func addUsedChannel(c *gin.Context, channelId int) {
 	useChannel := c.GetStringSlice("use_channel")
 	useChannel = append(useChannel, fmt.Sprintf("%d", channelId))
 	c.Set("use_channel", useChannel)
+}
+
+func shouldModeratePromptForRelay(info *relaycommon.RelayInfo) bool {
+	return info != nil && (info.RelayMode == relayconstant.RelayModeImagesGenerations || info.RelayMode == relayconstant.RelayModeImagesEdits)
+}
+
+func creemModerationPromptForRelay(request dto.Request, info *relaycommon.RelayInfo) string {
+	if !shouldModeratePromptForRelay(info) {
+		return ""
+	}
+	imageRequest, ok := request.(*dto.ImageRequest)
+	if !ok {
+		return ""
+	}
+	if strings.TrimSpace(imageRequest.Prompt) == "" {
+		return promptFromAliImageInput(imageRequest.Extra["input"])
+	}
+	return imageRequest.Prompt
+}
+
+func promptFromAliImageInput(rawInput []byte) string {
+	if len(rawInput) == 0 {
+		return ""
+	}
+	var input struct {
+		Messages []struct {
+			Content any `json:"content"`
+		} `json:"messages"`
+	}
+	if err := common.Unmarshal(rawInput, &input); err != nil {
+		return ""
+	}
+	var parts []string
+	for _, message := range input.Messages {
+		switch content := message.Content.(type) {
+		case string:
+			parts = append(parts, content)
+		case []any:
+			for _, item := range content {
+				switch v := item.(type) {
+				case string:
+					parts = append(parts, v)
+				case map[string]any:
+					if text, ok := v["text"].(string); ok {
+						parts = append(parts, text)
+					}
+				}
+			}
+		case map[string]any:
+			if text, ok := content["text"].(string); ok {
+				parts = append(parts, text)
+			}
+		}
+	}
+	return strings.TrimSpace(strings.Join(parts, "\n"))
+}
+
+func creemModerationExternalID(c *gin.Context, info *relaycommon.RelayInfo) string {
+	userID := 0
+	if info != nil {
+		userID = info.UserId
+	}
+	requestID := c.GetString(common.RequestIdKey)
+	if requestID == "" {
+		return fmt.Sprintf("user_%d", userID)
+	}
+	return fmt.Sprintf("user_%d:req_%s", userID, requestID)
 }
 
 func fastTokenCountMetaForPricing(request dto.Request) *types.TokenCountMeta {
