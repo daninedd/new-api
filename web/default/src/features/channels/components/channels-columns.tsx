@@ -29,11 +29,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { getCurrencyLabel } from '@/lib/currency'
-import {
-  formatTimestampToDate,
-  formatQuota as formatQuotaValue,
-} from '@/lib/format'
+import { formatTimestampToDate } from '@/lib/format'
 import { getLobeIcon } from '@/lib/lobe-icon'
 import { cn, truncateText } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -56,6 +52,7 @@ import { getCodexUsage } from '../api'
 import { CHANNEL_STATUS_CONFIG, MODEL_FETCHABLE_TYPES } from '../constants'
 import {
   formatBalance,
+  formatQuota as formatQuotaValue,
   formatRelativeTime,
   formatResponseTime,
   getBalanceVariant,
@@ -309,13 +306,9 @@ function BalanceCell({ channel }: { channel: Channel }) {
   const [codexUsageOpen, setCodexUsageOpen] = useState(false)
   const [codexUsageResponse, setCodexUsageResponse] =
     useState<CodexUsageDialogData | null>(null)
-  const currencyLabel = getCurrencyLabel()
-  const tokenSuffix = currencyLabel === 'Tokens' ? ' Tokens' : ''
-  const withSuffix = (value: string) =>
-    tokenSuffix && value !== '-' ? `${value}${tokenSuffix}` : value
 
-  const usedDisplay = withSuffix(formatQuotaValue(usedQuota))
-  const remainingDisplay = withSuffix(formatBalance(balance))
+  const usedDisplay = formatQuotaValue(usedQuota)
+  const remainingDisplay = formatBalance(balance)
 
   // Tag row: only show cumulative used quota
   if (isTagRow) {

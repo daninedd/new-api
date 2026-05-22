@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { formatCurrencyFromUSD, formatQuotaWithCurrency } from '@/lib/currency'
+import { getCurrencyDisplay } from '@/lib/currency'
 import dayjs from '@/lib/dayjs'
 import { formatTimestampToDate } from '@/lib/format'
 import {
@@ -303,11 +303,7 @@ export function validateChannelSettings(settings: string): boolean {
  */
 export function formatBalance(balance: number | null | undefined): string {
   if (balance == null || Number.isNaN(balance)) return '-'
-  return formatCurrencyFromUSD(balance, {
-    digitsLarge: 2,
-    digitsSmall: 4,
-    abbreviate: false,
-  })
+  return formatChannelUSD(balance)
 }
 
 /**
@@ -390,13 +386,22 @@ export function formatTimestamp(timestamp: number): string {
 // Quota Formatting
 // ============================================================================
 
-/** Format quota units using the global currency display configuration. */
+function formatChannelUSD(amount: number): string {
+  const abs = Math.abs(amount)
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    currencyDisplay: 'narrowSymbol',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: abs >= 1 ? 2 : 4,
+  }).format(amount)
+}
+
+/** Format quota units in the original channel USD accounting view. */
 export function formatQuota(quota: number): string {
-  return formatQuotaWithCurrency(quota, {
-    digitsLarge: 2,
-    digitsSmall: 4,
-    abbreviate: true,
-  })
+  const { config } = getCurrencyDisplay()
+  const quotaPerUnit = config.quotaPerUnit > 0 ? config.quotaPerUnit : 500000
+  return formatChannelUSD(quota / quotaPerUnit)
 }
 
 // ============================================================================
