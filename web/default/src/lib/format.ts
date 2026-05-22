@@ -58,6 +58,28 @@ export function formatCurrencyUSD(value: number | null | undefined): string {
 // Quota Formatting (500,000 units = $1)
 // ============================================================================
 
+const COMPACT_QUOTA_THRESHOLD = 10_000_000
+
+function removeTrailingZeros(value: string): string {
+  if (!value.includes('.')) return value
+  return value.replace(/(\.[0-9]*?)0+$/, '$1').replace(/\.$/, '')
+}
+
+function formatCompactQuotaAmount(value: number): string {
+  const abs = Math.abs(value)
+  if (abs < COMPACT_QUOTA_THRESHOLD) {
+    return Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+      value
+    )
+  }
+
+  if (abs >= 1_000_000_000) {
+    return `${removeTrailingZeros((value / 1_000_000_000).toFixed(1))}B`
+  }
+
+  return `${removeTrailingZeros((value / 1_000_000).toFixed(1))}M`
+}
+
 /**
  * Format quota into the configured display amount.
  * Quota is stored in units where `quotaPerUnit` equals 1 USD.
@@ -68,6 +90,25 @@ export function formatQuota(quota: number): string {
     digitsSmall: 4,
     abbreviate: true,
   })
+}
+
+/**
+ * Format user-facing quota with compact custom currency units when large.
+ */
+export function formatUserQuota(quota: number): string {
+  const { config, meta } = getCurrencyDisplay()
+
+  if (meta.kind === 'custom') {
+    const amountUSD = quota / config.quotaPerUnit
+    const amount = amountUSD * meta.exchangeRate
+    return `${formatCompactQuotaAmount(amount)} ${meta.symbol}`
+  }
+
+  if (meta.kind === 'tokens') {
+    return formatCompactQuotaAmount(quota)
+  }
+
+  return formatQuota(quota)
 }
 
 /**

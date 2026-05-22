@@ -47,8 +47,23 @@ export function formatQuotaShort(quota: number): string {
   return quota.toString()
 }
 
-function formatCompactUnit(value: number): string {
+const COMPACT_CREDIT_THRESHOLD = 10_000_000
+
+function formatPlainUnit(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+function formatCompactUnit(
+  value: number,
+  threshold: number = 1_000
+): string {
   const abs = Math.abs(value)
+  if (abs < threshold) {
+    return formatPlainUnit(value)
+  }
+
   const units = [
     { value: 1_000_000_000, suffix: 'B' },
     { value: 1_000_000, suffix: 'M' },
@@ -57,13 +72,15 @@ function formatCompactUnit(value: number): string {
   const unit = units.find((item) => abs >= item.value)
 
   if (!unit) {
-    return new Intl.NumberFormat(undefined, {
-      maximumFractionDigits: 2,
-    }).format(value)
+    return formatPlainUnit(value)
   }
 
   const formatted = (value / unit.value).toFixed(1).replace(/\.0$/, '')
   return `${formatted}${unit.suffix}`
+}
+
+function formatCustomCreditAmount(amount: number, symbol: string): string {
+  return `${formatCompactUnit(amount, COMPACT_CREDIT_THRESHOLD)} ${symbol}`
 }
 
 /**
@@ -74,7 +91,7 @@ export function formatTopupCredit(amountUSD: number): string {
 
   if (meta.kind === 'custom') {
     const amount = amountUSD * meta.exchangeRate
-    return `${formatCompactUnit(amount)} ${meta.symbol}`
+    return formatCustomCreditAmount(amount, meta.symbol)
   }
 
   if (meta.kind === 'tokens') {
@@ -87,6 +104,23 @@ export function formatTopupCredit(amountUSD: number): string {
     digitsSmall: 4,
     abbreviate: false,
   })
+}
+
+/**
+ * Format a direct credited amount, such as a Creem product quota.
+ */
+export function formatCreditUnits(amount: number): string {
+  const { meta } = getCurrencyDisplay()
+
+  if (meta.kind === 'custom') {
+    return formatCustomCreditAmount(amount, meta.symbol)
+  }
+
+  if (meta.kind === 'tokens') {
+    return formatCompactUnit(amount, COMPACT_CREDIT_THRESHOLD)
+  }
+
+  return formatPlainUnit(amount)
 }
 
 /**
