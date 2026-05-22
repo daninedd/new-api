@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { formatCurrencyFromUSD, getCurrencyDisplay } from '@/lib/currency'
 import { DEFAULT_DISCOUNT_RATE } from '../constants'
 
 // ============================================================================
@@ -46,6 +47,48 @@ export function formatQuotaShort(quota: number): string {
   return quota.toString()
 }
 
+function formatCompactUnit(value: number): string {
+  const abs = Math.abs(value)
+  const units = [
+    { value: 1_000_000_000, suffix: 'B' },
+    { value: 1_000_000, suffix: 'M' },
+    { value: 1_000, suffix: 'K' },
+  ]
+  const unit = units.find((item) => abs >= item.value)
+
+  if (!unit) {
+    return new Intl.NumberFormat(undefined, {
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
+
+  const formatted = (value / unit.value).toFixed(1).replace(/\.0$/, '')
+  return `${formatted}${unit.suffix}`
+}
+
+/**
+ * Format the credit a user receives from a USD top-up amount.
+ */
+export function formatTopupCredit(amountUSD: number): string {
+  const { config, meta } = getCurrencyDisplay()
+
+  if (meta.kind === 'custom') {
+    const amount = amountUSD * meta.exchangeRate
+    return `${formatCompactUnit(amount)} ${meta.symbol}`
+  }
+
+  if (meta.kind === 'tokens') {
+    const amount = amountUSD * config.quotaPerUnit
+    return formatCompactUnit(amount)
+  }
+
+  return formatCurrencyFromUSD(amountUSD, {
+    digitsLarge: 2,
+    digitsSmall: 4,
+    abbreviate: false,
+  })
+}
+
 /**
  * Format currency amount that is already in local currency.
  * This is used for payment amounts that have been calculated via priceRatio.
@@ -56,6 +99,9 @@ export function formatCurrency(amount: number | string): string {
   if (!Number.isFinite(numeric)) return '-'
 
   return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 0,
     maximumFractionDigits: Math.abs(numeric) >= 1 ? 2 : 4,
   }).format(numeric)

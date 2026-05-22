@@ -19,7 +19,6 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState, useEffect } from 'react'
 import { Gift, ExternalLink, Loader2, Receipt, WalletCards } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { formatNumber } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -40,6 +39,7 @@ import {
   getPaymentIcon,
   getMinTopupAmount,
   calculatePresetPricing,
+  formatTopupCredit,
 } from '../lib'
 import type {
   PaymentMethod,
@@ -135,6 +135,9 @@ export function RechargeFormCard({
   const hasWaffoPaymentMethods =
     Array.isArray(waffoPayMethods) && waffoPayMethods.length > 0
   const minTopup = getMinTopupAmount(topupInfo)
+  const customMinTopup = Math.max(minTopup, 10)
+  const isCustomAmount = selectedPreset === null
+  const minimumAllowedAmount = isCustomAmount ? customMinTopup : minTopup
   const redemptionEnabled = topupInfo?.enable_redemption !== false
 
   if (loading) {
@@ -223,7 +226,6 @@ export function RechargeFormCard({
                         topupInfo?.discount?.[preset.value] ||
                         1.0
                       const {
-                        displayValue,
                         actualPrice,
                         savedAmount,
                         hasDiscount,
@@ -247,7 +249,7 @@ export function RechargeFormCard({
                         >
                           <div className='flex w-full items-center justify-between'>
                             <div className='text-base font-semibold sm:text-lg'>
-                              {formatNumber(displayValue)}
+                              {formatCurrency(actualPrice)}
                             </div>
                             {hasDiscount && (
                               <div className='text-xs font-medium text-green-600'>
@@ -256,7 +258,7 @@ export function RechargeFormCard({
                             )}
                           </div>
                           <div className='text-muted-foreground mt-1.5 w-full text-xs sm:mt-2'>
-                            Pay {formatCurrency(actualPrice)}
+                            {formatTopupCredit(preset.value)}
                             {hasDiscount && savedAmount > 0 && (
                               <span className='text-green-600'>
                                 {' '}
@@ -279,15 +281,20 @@ export function RechargeFormCard({
                   {t('Custom Amount')}
                 </Label>
                 <div className='grid grid-cols-[minmax(0,1fr)_minmax(110px,0.55fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center'>
-                  <Input
-                    id='topup-amount'
-                    type='number'
-                    value={localAmount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    min={minTopup}
-                    placeholder={`Minimum ${minTopup}`}
-                    className='h-9 text-base sm:h-10 sm:text-lg'
-                  />
+                  <div className='relative'>
+                    <span className='text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm font-medium'>
+                      $
+                    </span>
+                    <Input
+                      id='topup-amount'
+                      type='number'
+                      value={localAmount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      min={customMinTopup}
+                      placeholder={`Minimum ${customMinTopup}`}
+                      className='h-9 pl-7 text-base sm:h-10 sm:text-lg'
+                    />
+                  </div>
                   <div className='bg-muted/30 flex min-h-9 items-center justify-between gap-2 rounded-md border px-3 lg:min-w-52'>
                     <span className='text-muted-foreground truncate text-xs'>
                       {t('Amount to pay:')}
@@ -310,8 +317,12 @@ export function RechargeFormCard({
                 {hasStandardPaymentMethods ? (
                   <div className='grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3'>
                     {topupInfo?.pay_methods?.map((method) => {
-                      const minTopup = method.min_topup || 0
-                      const disabled = minTopup > topupAmount
+                      const methodMinTopup = method.min_topup || 0
+                      const requiredMinTopup = Math.max(
+                        methodMinTopup,
+                        minimumAllowedAmount
+                      )
+                      const disabled = requiredMinTopup > topupAmount
 
                       const button = (
                         <Button
@@ -341,7 +352,7 @@ export function RechargeFormCard({
                             <TooltipTrigger render={button}></TooltipTrigger>
                             <TooltipContent>
                               {t('Minimum topup amount: {{amount}}', {
-                                amount: minTopup,
+                                amount: formatCurrency(requiredMinTopup),
                               })}
                             </TooltipContent>
                           </Tooltip>
@@ -373,7 +384,11 @@ export function RechargeFormCard({
                       {waffoPayMethods?.map((method, index) => {
                         const loadingKey = `waffo-${index}`
                         const waffoMin = waffoMinTopup || 0
-                        const belowMin = waffoMin > topupAmount
+                        const requiredWaffoMin = Math.max(
+                          waffoMin,
+                          minimumAllowedAmount
+                        )
+                        const belowMin = requiredWaffoMin > topupAmount
 
                         const button = (
                           <Button
@@ -404,7 +419,7 @@ export function RechargeFormCard({
                               <TooltipTrigger render={button}></TooltipTrigger>
                               <TooltipContent>
                                 {t('Minimum topup amount: {{amount}}', {
-                                  amount: waffoMin,
+                                  amount: formatCurrency(requiredWaffoMin),
                                 })}
                               </TooltipContent>
                             </Tooltip>

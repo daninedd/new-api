@@ -133,19 +133,28 @@ export function Wallet(props: WalletProps) {
   // Initialize topup amount when topup info is loaded
   useEffect(() => {
     if (topupInfo && topupAmount === 0) {
-      const minTopup = getMinTopupAmount(topupInfo)
+      const initialPreset = presetAmounts[0]
+      const minTopup = initialPreset
+        ? initialPreset.value
+        : Math.max(getMinTopupAmount(topupInfo), 10)
       setTopupAmount(minTopup)
+      setSelectedPreset(initialPreset?.value ?? null)
 
       // Calculate initial payment amount with default payment type
       const defaultPaymentType = getDefaultPaymentType(topupInfo)
       calculatePaymentAmount(minTopup, defaultPaymentType)
     }
-  }, [topupInfo, topupAmount, calculatePaymentAmount])
+  }, [topupInfo, presetAmounts, topupAmount, calculatePaymentAmount])
 
   // Get current payment type (selected or default)
   const getCurrentPaymentType = useCallback(() => {
     return selectedPaymentMethod?.type || getDefaultPaymentType(topupInfo)
   }, [selectedPaymentMethod, topupInfo])
+
+  const getMinimumTopupForCurrentInput = useCallback(() => {
+    const minTopup = getMinTopupAmount(topupInfo)
+    return selectedPreset === null ? Math.max(minTopup, 10) : minTopup
+  }, [selectedPreset, topupInfo])
 
   // Handle preset selection
   const handleSelectPreset = (preset: PresetAmount) => {
@@ -168,7 +177,7 @@ export function Wallet(props: WalletProps) {
 
     try {
       // Validate minimum topup
-      const minTopup = getMinTopupAmount(topupInfo)
+      const minTopup = getMinimumTopupForCurrentInput()
       if (topupAmount < minTopup) {
         return
       }
@@ -235,6 +244,10 @@ export function Wallet(props: WalletProps) {
   }
 
   const handleWaffoMethodSelect = async (_method: unknown, index: number) => {
+    if (topupAmount < getMinimumTopupForCurrentInput()) {
+      return
+    }
+
     const loadingKey = `waffo-${index}`
     setPaymentLoading(loadingKey)
 
@@ -338,7 +351,6 @@ export function Wallet(props: WalletProps) {
         calculating={calculating}
         processing={processing || pancakeProcessing}
         discountRate={getDiscountRate()}
-        usdExchangeRate={effectiveUsdExchangeRate}
       />
 
       <TransferDialog

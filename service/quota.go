@@ -479,14 +479,14 @@ func checkAndSendQuotaNotify(relayInfo *relaycommon.RelayInfo, quota int, preCon
 
 			if notifyType == dto.NotifyTypeBark {
 				// Bark推送使用简短文本，不支持HTML
-				content = "{{value}}，remaining quota: {{value}}, please top up in time"
+				content = "{{value}}, remaining quota: {{value}}, please top up in time"
 				values = []interface{}{prompt, logger.FormatQuota(relayInfo.UserQuota)}
 			} else if notifyType == dto.NotifyTypeGotify {
-				content = "{{value}}, current remaining quota is {{value}}, please top up in time。"
+				content = "{{value}}, current remaining quota is {{value}}, please top up in time."
 				values = []interface{}{prompt, logger.FormatQuota(relayInfo.UserQuota)}
 			} else {
 				// 默认内容格式，适用于Email和Webhook（支持HTML）
-				content = "{{value}}, current remaining quota is {{value}}，为了不影响您的使用, please top up in time。<br/>充值链接：<a href='{{value}}'>{{value}}</a>"
+				content = "{{value}}, current remaining quota is {{value}}. To avoid service interruption, please top up in time.<br/>Top-up link: <a href='{{value}}'>{{value}}</a>"
 				values = []interface{}{prompt, logger.FormatQuota(relayInfo.UserQuota), topUpLink, topUpLink}
 			}
 
@@ -530,13 +530,13 @@ func checkAndSendSubscriptionQuotaNotify(relayInfo *relaycommon.RelayInfo) {
 		}
 
 		if notifyType == dto.NotifyTypeBark {
-			content = "{{value}}，remaining quota: {{value}}, please top up in time"
+			content = "{{value}}, remaining quota: {{value}}, please top up in time"
 			values = []interface{}{prompt, logger.FormatQuota(int(remaining))}
 		} else if notifyType == dto.NotifyTypeGotify {
-			content = "{{value}}, current remaining quota is {{value}}, please top up in time。"
+			content = "{{value}}, current remaining quota is {{value}}, please top up in time."
 			values = []interface{}{prompt, logger.FormatQuota(int(remaining))}
 		} else {
-			content = "{{value}}, current remaining quota is {{value}}，为了不影响您的使用, please top up in time。<br/>充值链接：<a href='{{value}}'>{{value}}</a>"
+			content = "{{value}}, current remaining quota is {{value}}. To avoid service interruption, please top up in time.<br/>Top-up link: <a href='{{value}}'>{{value}}</a>"
 			values = []interface{}{prompt, logger.FormatQuota(int(remaining)), topUpLink, topUpLink}
 		}
 
