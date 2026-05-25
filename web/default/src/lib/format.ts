@@ -96,12 +96,10 @@ export function formatQuota(quota: number): string {
  * Format user-facing quota with compact custom currency units when large.
  */
 export function formatUserQuota(quota: number): string {
-  const { config, meta } = getCurrencyDisplay()
+  const { meta } = getCurrencyDisplay()
 
   if (meta.kind === 'custom') {
-    const amountUSD = quota / config.quotaPerUnit
-    const amount = amountUSD * meta.exchangeRate
-    return `${formatCompactQuotaAmount(amount)} ${meta.symbol}`
+    return `${formatCompactQuotaAmount(quota)} ${meta.symbol}`
   }
 
   if (meta.kind === 'tokens') {
