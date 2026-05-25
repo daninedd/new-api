@@ -19,8 +19,6 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState } from 'react'
 import { Search, Copy, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { formatCurrencyFromUSD } from '@/lib/currency'
-import { formatNumber } from '@/lib/format'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import {
   AlertDialog,
@@ -54,6 +52,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/status-badge'
 import { useBillingHistory } from '../../hooks/use-billing-history'
+import { formatCreditUnits, formatCurrency, formatTopupCredit } from '../../lib'
 import {
   getStatusConfig,
   getPaymentMethodName,
@@ -89,6 +88,10 @@ export function BillingHistoryDialog({
   const { copyToClipboard, copiedText } = useCopyToClipboard({ notify: false })
 
   const totalPages = Math.ceil(total / pageSize)
+  const formatRecordAmount = (record: { amount: number; payment_method: string }) =>
+    record.payment_method === 'creem'
+      ? formatCreditUnits(record.amount)
+      : formatTopupCredit(record.amount)
 
   const handleConfirmComplete = async () => {
     if (confirmTradeNo) {
@@ -244,11 +247,7 @@ export function BillingHistoryDialog({
                               {t('Amount')}
                             </Label>
                             <div className='text-sm font-semibold'>
-                              {formatCurrencyFromUSD(record.amount, {
-                                digitsLarge: 2,
-                                digitsSmall: 2,
-                                abbreviate: false,
-                              })}
+                              {formatRecordAmount(record)}
                             </div>
                           </div>
                           <div className='space-y-1'>
@@ -256,7 +255,7 @@ export function BillingHistoryDialog({
                               {t('Payment')}
                             </Label>
                             <div className='text-sm font-semibold text-red-600'>
-                              {formatNumber(record.money)}
+                              {formatCurrency(record.money)}
                             </div>
                           </div>
                         </div>
