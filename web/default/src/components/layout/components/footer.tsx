@@ -16,10 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 
 interface FooterLink {
@@ -74,58 +75,75 @@ function FooterLinkItem(props: { link: FooterLink }) {
   )
 }
 
-function ProjectAttribution(props: { currentYear: number }) {
+// Renders User Agreement / Privacy Policy links inline with the parent's
+// copyright row when either is configured in System Settings → Site. Emits
+// fragmented siblings so the parent flex container's gap controls spacing.
+function LegalLinks(props: { leadingSeparator?: boolean }) {
   const { t } = useTranslation()
-
+  const { status } = useStatus()
+  const items: { key: string; label: string; href: string }[] = []
+  if (status?.user_agreement_enabled) {
+    items.push({
+      key: 'user-agreement',
+      label: t('User Agreement'),
+      href: '/user-agreement',
+    })
+  }
+  if (status?.privacy_policy_enabled) {
+    items.push({
+      key: 'privacy-policy',
+      label: t('Privacy Policy'),
+      href: '/privacy-policy',
+    })
+  }
+  if (items.length === 0) {
+    return null
+  }
   return (
-    <div className='text-muted-foreground/45 text-center text-xs sm:text-right'>
-      <span className='text-muted-foreground/45'>
-        &copy; {props.currentYear}{' '}
-        <a
-          href='https://github.com/QuantumNous/new-api'
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-foreground/70 hover:text-foreground font-medium transition-colors'
-        >
-          {t('All-LLMs')}
-        </a>
-        . {t(NEW_API_FOOTER_ATTRIBUTION_KEY)}
-      </span>
-    </div>
+    <>
+      {items.map((item, index) => (
+        <Fragment key={item.key}>
+          {(props.leadingSeparator || index > 0) && (
+            <span aria-hidden='true' className='text-muted-foreground/30'>
+              ·
+            </span>
+          )}
+          <Link
+            to={item.href}
+            className='hover:text-foreground transition-colors duration-200'
+          >
+            {item.label}
+          </Link>
+        </Fragment>
+      ))}
+    </>
   )
 }
 
-function LegalLinks() {
+// inline=true returns just the inner span for composition in a parent flex
+// row. inline=false wraps in a centered/right-aligned div (default).
+function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
   const { t } = useTranslation()
-  const { userAgreementEnabled, privacyPolicyEnabled } = useSystemConfig()
-
-  if (!userAgreementEnabled && !privacyPolicyEnabled) {
-    return null
+  const content = (
+    <span className='text-muted-foreground/45'>
+      &copy; {props.currentYear}{' '}
+      <a
+        href='https://github.com/QuantumNous/new-api'
+        target='_blank'
+        rel='noopener noreferrer'
+        className='text-foreground/70 hover:text-foreground font-medium transition-colors'
+      >
+        {t('New API')}
+      </a>
+      . {t(NEW_API_FOOTER_ATTRIBUTION_KEY)}
+    </span>
+  )
+  if (props.inline) {
+    return content
   }
-
-  const links = [
-    userAgreementEnabled
-      ? { text: t('User Agreement'), href: '/user-agreement' }
-      : null,
-    privacyPolicyEnabled
-      ? { text: t('Privacy Policy'), href: '/privacy-policy' }
-      : null,
-  ].filter(Boolean) as FooterLink[]
-
   return (
-    <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs sm:justify-start'>
-      {links.map((link, index) => (
-        <Link
-          key={link.href}
-          to={link.href}
-          className='text-muted-foreground/70 hover:text-foreground transition-colors'
-        >
-          {link.text}
-          {index < links.length - 1 && (
-            <span className='text-muted-foreground/35 ml-3'>/</span>
-          )}
-        </Link>
-      ))}
+    <div className='text-muted-foreground/45 text-center text-xs sm:text-right'>
+      {content}
     </div>
   )
 }
@@ -233,10 +251,10 @@ export function Footer(props: FooterProps) {
               className='custom-footer text-muted-foreground min-w-0 text-center text-sm sm:text-left'
               dangerouslySetInnerHTML={{ __html: footerHtml }}
             />
-            <LegalLinks />
-            <ContactLink />
-            <div className='border-border/60 w-full border-t pt-4 sm:w-auto sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5'>
-              <ProjectAttribution currentYear={currentYear} />
+            <div className='border-border/60 text-muted-foreground/45 flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t pt-4 text-xs sm:w-auto sm:justify-end sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5'>
+              <LegalLinks />
+              <ContactLink />
+              <ProjectAttribution currentYear={currentYear} inline />
             </div>
           </div>
         </div>
@@ -288,14 +306,17 @@ export function Footer(props: FooterProps) {
           )}
         </div>
 
-        {/* Bottom section */}
-        <div className='border-border/30 mt-12 flex flex-col items-center justify-between gap-3 border-t pt-6 sm:flex-row'>
+        {/* Copyright + optional legal links inline on the left, project
+            attribution on the right; wraps on narrow screens. */}
+        <div className='border-border/30 mt-12 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t pt-6 sm:flex-row'>
           <div className='flex flex-col items-center gap-2 sm:items-start'>
-            <p className='text-muted-foreground/40 text-xs'>
-              &copy; {currentYear} {displayName}.{' '}
-              {props.copyright ?? t('footer.defaultCopyright')}
-            </p>
-            <LegalLinks />
+            <div className='text-muted-foreground/40 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:justify-start'>
+              <span>
+                &copy; {currentYear} {displayName}.{' '}
+                {props.copyright ?? t('footer.defaultCopyright')}
+              </span>
+              <LegalLinks leadingSeparator />
+            </div>
             <ContactLink />
           </div>
           <ProjectAttribution currentYear={currentYear} />
