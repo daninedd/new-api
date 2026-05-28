@@ -36,6 +36,10 @@ func SetWebRouter(router *gin.Engine, assets ThemeAssets) {
 			controller.RelayNotFound(c)
 			return
 		}
+		if !shouldServeWebIndex(c.Request.URL.Path) {
+			c.String(http.StatusNotFound, "404 page not found")
+			return
+		}
 		c.Header("Cache-Control", "no-cache")
 		if common.GetTheme() == "classic" {
 			c.Data(http.StatusOK, "text/html; charset=utf-8", assets.ClassicIndexPage)
@@ -43,4 +47,68 @@ func SetWebRouter(router *gin.Engine, assets ThemeAssets) {
 			c.Data(http.StatusOK, "text/html; charset=utf-8", assets.DefaultIndexPage)
 		}
 	})
+}
+
+var webIndexExactPaths = map[string]struct{}{
+	"/":                {},
+	"/401":             {},
+	"/403":             {},
+	"/404":             {},
+	"/500":             {},
+	"/503":             {},
+	"/about":           {},
+	"/console/log":     {},
+	"/console/topup":   {},
+	"/forgot-password": {},
+	"/oauth":           {},
+	"/otp":             {},
+	"/pricing":         {},
+	"/privacy-policy":  {},
+	"/rankings":        {},
+	"/register":        {},
+	"/reset":           {},
+	"/setup":           {},
+	"/sign-in":         {},
+	"/sign-up":         {},
+	"/user/reset":      {},
+	"/user-agreement":  {},
+}
+
+var webIndexPathPrefixes = []string{
+	"/channels",
+	"/chat",
+	"/chat2link",
+	"/dashboard",
+	"/errors",
+	"/keys",
+	"/models",
+	"/oauth",
+	"/playground",
+	"/pricing",
+	"/profile",
+	"/redemption-codes",
+	"/subscriptions",
+	"/system-settings",
+	"/usage-logs",
+	"/users",
+	"/wallet",
+}
+
+func shouldServeWebIndex(requestPath string) bool {
+	if requestPath == "" {
+		return true
+	}
+	requestPath = strings.TrimRight(requestPath, "/")
+	if requestPath == "" {
+		requestPath = "/"
+	}
+	if _, ok := webIndexExactPaths[requestPath]; ok {
+		return true
+	}
+	for _, prefix := range webIndexPathPrefixes {
+		if requestPath == prefix || strings.HasPrefix(requestPath, prefix+"/") {
+			return true
+		}
+	}
+	return false
 }
