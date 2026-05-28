@@ -68,6 +68,11 @@ func TestRenderWebIndexInjectsRouteSEO(t *testing.T) {
 	assertContains(t, rendered, `<title>Model Marketplace - All-LLMs</title>`)
 	assertContains(t, rendered, `<meta name="title" content="Model Marketplace - All-LLMs" />`)
 	assertContains(t, rendered, `<link rel="canonical" href="https://all-llms.com/pricing" />`)
+	assertContains(t, rendered, `<meta property="og:title" content="Model Marketplace - All-LLMs" />`)
+	assertContains(t, rendered, `<meta property="og:image" content="https://all-llms.com/og-image.png" />`)
+	assertContains(t, rendered, `<meta name="twitter:card" content="summary_large_image" />`)
+	assertContains(t, rendered, `<script type="application/ld+json">`)
+	assertContains(t, rendered, `"@type":"CollectionPage"`)
 	assertContains(t, rendered, "Compare and access AI models through All-LLMs")
 }
 

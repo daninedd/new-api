@@ -119,12 +119,14 @@ type webSEOMeta struct {
 	Title       string
 	Description string
 	Canonical   string
+	PageType    string
 }
 
 var defaultWebSEOMeta = webSEOMeta{
 	Title:       "All-LLMs - Unified AI API Gateway",
 	Description: "All-LLMs is a unified AI API gateway and model management dashboard for OpenAI, Claude, Gemini, DeepSeek, Qwen, Llama, and other providers.",
 	Canonical:   "https://all-llms.com/",
+	PageType:    "WebSite",
 }
 
 func renderWebIndex(indexPage []byte, requestPath string) []byte {
@@ -137,6 +139,8 @@ func renderWebIndex(indexPage []byte, requestPath string) []byte {
 	htmlPage = replaceOrInsertMetaContent(htmlPage, `name="title"`, `<meta name="title" content="`+html.EscapeString(meta.Title)+`" />`)
 	htmlPage = replaceOrInsertMetaContent(htmlPage, `name="description"`, `<meta name="description" content="`+html.EscapeString(meta.Description)+`" />`)
 	htmlPage = replaceOrInsertLinkRel(htmlPage, `rel="canonical"`, `<link rel="canonical" href="`+html.EscapeString(meta.Canonical)+`" />`)
+	htmlPage = injectSocialMeta(htmlPage, meta)
+	htmlPage = replaceOrInsertJSONLD(htmlPage, buildWebJSONLD(meta))
 	return htmlPage
 }
 
@@ -148,24 +152,28 @@ func getWebSEOMeta(requestPath string) webSEOMeta {
 			Title:       "Model Marketplace - All-LLMs",
 			Description: "Compare and access AI models through All-LLMs with unified routing, transparent pricing, usage tracking, and provider management.",
 			Canonical:   canonicalURL(path),
+			PageType:    "CollectionPage",
 		}
 	case path == "/about":
 		return webSEOMeta{
 			Title:       "About All-LLMs",
 			Description: "Learn about All-LLMs, a unified gateway for connecting and managing AI model providers through compatible API routes.",
 			Canonical:   canonicalURL(path),
+			PageType:    "AboutPage",
 		}
 	case path == "/user-agreement":
 		return webSEOMeta{
 			Title:       "User Agreement - All-LLMs",
 			Description: "Read the All-LLMs user agreement, including service terms, account responsibilities, and platform usage rules.",
 			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
 		}
 	case path == "/privacy-policy":
 		return webSEOMeta{
 			Title:       "Privacy Policy - All-LLMs",
 			Description: "Read the All-LLMs privacy policy to understand how account, usage, and service data are handled.",
 			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
 		}
 	default:
 		return defaultWebSEOMeta
@@ -188,6 +196,109 @@ func canonicalURL(path string) string {
 		return "https://all-llms.com/"
 	}
 	return "https://all-llms.com" + path
+}
+
+const ogImageURL = "https://all-llms.com/og-image.png"
+
+func injectSocialMeta(page []byte, meta webSEOMeta) []byte {
+	tags := []struct {
+		marker string
+		tag    string
+	}{
+		{`property="og:type"`, `<meta property="og:type" content="website" />`},
+		{`property="og:site_name"`, `<meta property="og:site_name" content="All-LLMs" />`},
+		{`property="og:title"`, `<meta property="og:title" content="` + html.EscapeString(meta.Title) + `" />`},
+		{`property="og:description"`, `<meta property="og:description" content="` + html.EscapeString(meta.Description) + `" />`},
+		{`property="og:url"`, `<meta property="og:url" content="` + html.EscapeString(meta.Canonical) + `" />`},
+		{`property="og:image"`, `<meta property="og:image" content="` + ogImageURL + `" />`},
+		{`property="og:image:width"`, `<meta property="og:image:width" content="1200" />`},
+		{`property="og:image:height"`, `<meta property="og:image:height" content="630" />`},
+		{`property="og:image:alt"`, `<meta property="og:image:alt" content="All-LLMs unified AI API gateway social preview" />`},
+		{`name="twitter:card"`, `<meta name="twitter:card" content="summary_large_image" />`},
+		{`name="twitter:title"`, `<meta name="twitter:title" content="` + html.EscapeString(meta.Title) + `" />`},
+		{`name="twitter:description"`, `<meta name="twitter:description" content="` + html.EscapeString(meta.Description) + `" />`},
+		{`name="twitter:image"`, `<meta name="twitter:image" content="` + ogImageURL + `" />`},
+		{`name="twitter:image:alt"`, `<meta name="twitter:image:alt" content="All-LLMs unified AI API gateway social preview" />`},
+	}
+	for _, item := range tags {
+		page = replaceOrInsertSingleTag(page, "<meta", item.marker, item.tag)
+	}
+	return page
+}
+
+func buildWebJSONLD(meta webSEOMeta) string {
+	graph := []map[string]any{
+		{
+			"@type":  "Organization",
+			"@id":    "https://all-llms.com/#organization",
+			"name":   "All-LLMs",
+			"url":    "https://all-llms.com/",
+			"logo":   "https://all-llms.com/logo.png",
+			"sameAs": []string{"https://github.com/QuantumNous/new-api"},
+		},
+		{
+			"@type": "WebSite",
+			"@id":   "https://all-llms.com/#website",
+			"url":   "https://all-llms.com/",
+			"name":  "All-LLMs",
+			"publisher": map[string]string{
+				"@id": "https://all-llms.com/#organization",
+			},
+		},
+		{
+			"@type":               "SoftwareApplication",
+			"@id":                 "https://all-llms.com/#software",
+			"name":                "All-LLMs",
+			"applicationCategory": "DeveloperApplication",
+			"operatingSystem":     "Web",
+			"url":                 "https://all-llms.com/",
+			"description":         defaultWebSEOMeta.Description,
+			"image":               ogImageURL,
+			"publisher": map[string]string{
+				"@id": "https://all-llms.com/#organization",
+			},
+			"offers": map[string]string{
+				"@type":         "Offer",
+				"price":         "0",
+				"priceCurrency": "USD",
+			},
+		},
+		{
+			"@type":       meta.PageType,
+			"@id":         meta.Canonical + "#webpage",
+			"url":         meta.Canonical,
+			"name":        meta.Title,
+			"description": meta.Description,
+			"image":       ogImageURL,
+			"isPartOf": map[string]string{
+				"@id": "https://all-llms.com/#website",
+			},
+			"publisher": map[string]string{
+				"@id": "https://all-llms.com/#organization",
+			},
+		},
+	}
+	data := map[string]any{
+		"@context": "https://schema.org",
+		"@graph":   graph,
+	}
+	jsonLD, err := common.Marshal(data)
+	if err != nil {
+		return ""
+	}
+	return string(jsonLD)
+}
+
+func replaceOrInsertJSONLD(page []byte, jsonLD string) []byte {
+	if jsonLD == "" {
+		return page
+	}
+	return replaceOrInsertHeadTag(
+		page,
+		`<script type="application/ld+json">`,
+		`</script>`,
+		`<script type="application/ld+json">`+jsonLD+`</script>`,
+	)
 }
 
 func replaceOrInsertHeadTag(page []byte, openTag string, closeTag string, replacement string) []byte {
