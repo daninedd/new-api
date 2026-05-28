@@ -10,7 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserAgreementRouteImport } from './routes/user-agreement'
+import { Route as SelfHostedAiGatewayRouteImport } from './routes/self-hosted-ai-gateway'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as OpenaiCompatibleApiGatewayRouteImport } from './routes/openai-compatible-api-gateway'
+import { Route as GeminiApiGatewayRouteImport } from './routes/gemini-api-gateway'
+import { Route as ClaudeApiGatewayRouteImport } from './routes/claude-api-gateway'
+import { Route as AiModelRouterRouteImport } from './routes/ai-model-router'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -74,9 +79,35 @@ const UserAgreementRoute = UserAgreementRouteImport.update({
   path: '/user-agreement',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SelfHostedAiGatewayRoute = SelfHostedAiGatewayRouteImport.update({
+  id: '/self-hosted-ai-gateway',
+  path: '/self-hosted-ai-gateway',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpenaiCompatibleApiGatewayRoute =
+  OpenaiCompatibleApiGatewayRouteImport.update({
+    id: '/openai-compatible-api-gateway',
+    path: '/openai-compatible-api-gateway',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GeminiApiGatewayRoute = GeminiApiGatewayRouteImport.update({
+  id: '/gemini-api-gateway',
+  path: '/gemini-api-gateway',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaudeApiGatewayRoute = ClaudeApiGatewayRouteImport.update({
+  id: '/claude-api-gateway',
+  path: '/claude-api-gateway',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiModelRouterRoute = AiModelRouterRouteImport.update({
+  id: '/ai-model-router',
+  path: '/ai-model-router',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -394,7 +425,12 @@ const AuthenticatedSystemSettingsAuthSectionRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-model-router': typeof AiModelRouterRoute
+  '/claude-api-gateway': typeof ClaudeApiGatewayRoute
+  '/gemini-api-gateway': typeof GeminiApiGatewayRoute
+  '/openai-compatible-api-gateway': typeof OpenaiCompatibleApiGatewayRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/self-hosted-ai-gateway': typeof SelfHostedAiGatewayRoute
   '/user-agreement': typeof UserAgreementRoute
   '/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -453,7 +489,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-model-router': typeof AiModelRouterRoute
+  '/claude-api-gateway': typeof ClaudeApiGatewayRoute
+  '/gemini-api-gateway': typeof GeminiApiGatewayRoute
+  '/openai-compatible-api-gateway': typeof OpenaiCompatibleApiGatewayRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/self-hosted-ai-gateway': typeof SelfHostedAiGatewayRoute
   '/user-agreement': typeof UserAgreementRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/oauth': typeof authOauthRoute
@@ -514,7 +555,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/ai-model-router': typeof AiModelRouterRoute
+  '/claude-api-gateway': typeof ClaudeApiGatewayRoute
+  '/gemini-api-gateway': typeof GeminiApiGatewayRoute
+  '/openai-compatible-api-gateway': typeof OpenaiCompatibleApiGatewayRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/self-hosted-ai-gateway': typeof SelfHostedAiGatewayRoute
   '/user-agreement': typeof UserAgreementRoute
   '/_authenticated/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -575,7 +621,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-model-router'
+    | '/claude-api-gateway'
+    | '/gemini-api-gateway'
+    | '/openai-compatible-api-gateway'
     | '/privacy-policy'
+    | '/self-hosted-ai-gateway'
     | '/user-agreement'
     | '/system-settings'
     | '/forgot-password'
@@ -634,7 +685,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-model-router'
+    | '/claude-api-gateway'
+    | '/gemini-api-gateway'
+    | '/openai-compatible-api-gateway'
     | '/privacy-policy'
+    | '/self-hosted-ai-gateway'
     | '/user-agreement'
     | '/forgot-password'
     | '/oauth'
@@ -694,7 +750,12 @@ export interface FileRouteTypes {
     | '/'
     | '/(auth)'
     | '/_authenticated'
+    | '/ai-model-router'
+    | '/claude-api-gateway'
+    | '/gemini-api-gateway'
+    | '/openai-compatible-api-gateway'
     | '/privacy-policy'
+    | '/self-hosted-ai-gateway'
     | '/user-agreement'
     | '/_authenticated/system-settings'
     | '/(auth)/forgot-password'
@@ -756,7 +817,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AiModelRouterRoute: typeof AiModelRouterRoute
+  ClaudeApiGatewayRoute: typeof ClaudeApiGatewayRoute
+  GeminiApiGatewayRoute: typeof GeminiApiGatewayRoute
+  OpenaiCompatibleApiGatewayRoute: typeof OpenaiCompatibleApiGatewayRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  SelfHostedAiGatewayRoute: typeof SelfHostedAiGatewayRoute
   UserAgreementRoute: typeof UserAgreementRoute
   errors401Route: typeof errors401Route
   errors403Route: typeof errors403Route
@@ -782,11 +848,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserAgreementRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/self-hosted-ai-gateway': {
+      id: '/self-hosted-ai-gateway'
+      path: '/self-hosted-ai-gateway'
+      fullPath: '/self-hosted-ai-gateway'
+      preLoaderRoute: typeof SelfHostedAiGatewayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy-policy': {
       id: '/privacy-policy'
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/openai-compatible-api-gateway': {
+      id: '/openai-compatible-api-gateway'
+      path: '/openai-compatible-api-gateway'
+      fullPath: '/openai-compatible-api-gateway'
+      preLoaderRoute: typeof OpenaiCompatibleApiGatewayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gemini-api-gateway': {
+      id: '/gemini-api-gateway'
+      path: '/gemini-api-gateway'
+      fullPath: '/gemini-api-gateway'
+      preLoaderRoute: typeof GeminiApiGatewayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claude-api-gateway': {
+      id: '/claude-api-gateway'
+      path: '/claude-api-gateway'
+      fullPath: '/claude-api-gateway'
+      preLoaderRoute: typeof ClaudeApiGatewayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-model-router': {
+      id: '/ai-model-router'
+      path: '/ai-model-router'
+      fullPath: '/ai-model-router'
+      preLoaderRoute: typeof AiModelRouterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1325,7 +1426,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AiModelRouterRoute: AiModelRouterRoute,
+  ClaudeApiGatewayRoute: ClaudeApiGatewayRoute,
+  GeminiApiGatewayRoute: GeminiApiGatewayRoute,
+  OpenaiCompatibleApiGatewayRoute: OpenaiCompatibleApiGatewayRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  SelfHostedAiGatewayRoute: SelfHostedAiGatewayRoute,
   UserAgreementRoute: UserAgreementRoute,
   errors401Route: errors401Route,
   errors403Route: errors403Route,

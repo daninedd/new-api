@@ -10,6 +10,21 @@
     <loc>https://all-llms.com/about</loc>
   </url>
   <url>
+    <loc>https://all-llms.com/openai-compatible-api-gateway</loc>
+  </url>
+  <url>
+    <loc>https://all-llms.com/claude-api-gateway</loc>
+  </url>
+  <url>
+    <loc>https://all-llms.com/gemini-api-gateway</loc>
+  </url>
+  <url>
+    <loc>https://all-llms.com/ai-model-router</loc>
+  </url>
+  <url>
+    <loc>https://all-llms.com/self-hosted-ai-gateway</loc>
+  </url>
+  <url>
     <loc>https://all-llms.com/user-agreement</loc>
   </url>
   <url>

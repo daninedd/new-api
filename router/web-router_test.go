@@ -22,6 +22,11 @@ func TestShouldServeWebIndex(t *testing.T) {
 			want:        true,
 		},
 		{
+			name:        "seo landing route",
+			requestPath: "/openai-compatible-api-gateway",
+			want:        true,
+		},
+		{
 			name:        "dynamic pricing route",
 			requestPath: "/pricing/gpt-4.1",
 			want:        true,
@@ -113,6 +118,36 @@ func TestGetWebSEOMeta(t *testing.T) {
 			path:      "/pricing/gpt-4.1/",
 			title:     "Model Marketplace - All-LLMs",
 			canonical: "https://all-llms.com/pricing/gpt-4.1",
+		},
+		{
+			name:      "openai compatible gateway",
+			path:      "/openai-compatible-api-gateway",
+			title:     "OpenAI-compatible API Gateway - All-LLMs",
+			canonical: "https://all-llms.com/openai-compatible-api-gateway",
+		},
+		{
+			name:      "claude gateway",
+			path:      "/claude-api-gateway",
+			title:     "Claude API Gateway - All-LLMs",
+			canonical: "https://all-llms.com/claude-api-gateway",
+		},
+		{
+			name:      "gemini gateway",
+			path:      "/gemini-api-gateway",
+			title:     "Gemini API Gateway - All-LLMs",
+			canonical: "https://all-llms.com/gemini-api-gateway",
+		},
+		{
+			name:      "ai model router",
+			path:      "/ai-model-router",
+			title:     "AI Model Router - All-LLMs",
+			canonical: "https://all-llms.com/ai-model-router",
+		},
+		{
+			name:      "self hosted gateway",
+			path:      "/self-hosted-ai-gateway",
+			title:     "Self-hosted AI Gateway - All-LLMs",
+			canonical: "https://all-llms.com/self-hosted-ai-gateway",
 		},
 	}
 

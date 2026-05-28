@@ -52,28 +52,33 @@ func SetWebRouter(router *gin.Engine, assets ThemeAssets) {
 }
 
 var webIndexExactPaths = map[string]struct{}{
-	"/":                {},
-	"/401":             {},
-	"/403":             {},
-	"/404":             {},
-	"/500":             {},
-	"/503":             {},
-	"/about":           {},
-	"/console/log":     {},
-	"/console/topup":   {},
-	"/forgot-password": {},
-	"/oauth":           {},
-	"/otp":             {},
-	"/pricing":         {},
-	"/privacy-policy":  {},
-	"/rankings":        {},
-	"/register":        {},
-	"/reset":           {},
-	"/setup":           {},
-	"/sign-in":         {},
-	"/sign-up":         {},
-	"/user/reset":      {},
-	"/user-agreement":  {},
+	"/":                              {},
+	"/401":                           {},
+	"/403":                           {},
+	"/404":                           {},
+	"/500":                           {},
+	"/503":                           {},
+	"/about":                         {},
+	"/ai-model-router":               {},
+	"/claude-api-gateway":            {},
+	"/console/log":                   {},
+	"/console/topup":                 {},
+	"/forgot-password":               {},
+	"/gemini-api-gateway":            {},
+	"/oauth":                         {},
+	"/openai-compatible-api-gateway": {},
+	"/otp":                           {},
+	"/pricing":                       {},
+	"/privacy-policy":                {},
+	"/rankings":                      {},
+	"/register":                      {},
+	"/reset":                         {},
+	"/self-hosted-ai-gateway":        {},
+	"/setup":                         {},
+	"/sign-in":                       {},
+	"/sign-up":                       {},
+	"/user/reset":                    {},
+	"/user-agreement":                {},
 }
 
 var webIndexPathPrefixes = []string{
@@ -160,6 +165,41 @@ func getWebSEOMeta(requestPath string) webSEOMeta {
 			Description: "Learn about All-LLMs, a unified gateway for connecting and managing AI model providers through compatible API routes.",
 			Canonical:   canonicalURL(path),
 			PageType:    "AboutPage",
+		}
+	case path == "/openai-compatible-api-gateway":
+		return webSEOMeta{
+			Title:       "OpenAI-compatible API Gateway - All-LLMs",
+			Description: "Use All-LLMs as an OpenAI-compatible API gateway to route requests across OpenAI, Claude, Gemini, DeepSeek, Qwen, Llama, and other providers.",
+			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
+		}
+	case path == "/claude-api-gateway":
+		return webSEOMeta{
+			Title:       "Claude API Gateway - All-LLMs",
+			Description: "Connect Claude workflows through All-LLMs with unified access control, usage tracking, quotas, billing, and multi-provider routing.",
+			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
+		}
+	case path == "/gemini-api-gateway":
+		return webSEOMeta{
+			Title:       "Gemini API Gateway - All-LLMs",
+			Description: "Route Gemini traffic through All-LLMs with shared API keys, monitoring, limits, fallback options, and centralized provider management.",
+			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
+		}
+	case path == "/ai-model-router":
+		return webSEOMeta{
+			Title:       "AI Model Router - All-LLMs",
+			Description: "Route AI requests across providers and models with centralized policies for fallback, quotas, cost tracking, and observability.",
+			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
+		}
+	case path == "/self-hosted-ai-gateway":
+		return webSEOMeta{
+			Title:       "Self-hosted AI Gateway - All-LLMs",
+			Description: "Deploy a self-hosted AI API gateway to manage providers, users, keys, billing, and usage logs in your own environment.",
+			Canonical:   canonicalURL(path),
+			PageType:    "WebPage",
 		}
 	case path == "/user-agreement":
 		return webSEOMeta{

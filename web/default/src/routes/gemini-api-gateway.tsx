@@ -16,9 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { CTA } from './sections/cta'
-export { Features } from './sections/features'
-export { Hero } from './sections/hero'
-export { HowItWorks } from './sections/how-it-works'
-export { Solutions } from './sections/solutions'
-export { Stats } from './sections/stats'
+import { createFileRoute } from '@tanstack/react-router'
+import { SeoLandingPage } from '@/features/seo-landing-pages'
+
+export const Route = createFileRoute('/gemini-api-gateway')({
+  component: () => <SeoLandingPage page='gemini-api-gateway' />,
+})
