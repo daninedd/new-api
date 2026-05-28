@@ -102,6 +102,29 @@ func TestRechargeWaffoPancake_RejectsMismatchedPaymentMethod(t *testing.T) {
 	assert.Equal(t, 0, getUserQuotaForPaymentGuardTest(t, 101))
 }
 
+func TestManualCompleteTopUp_CreemUsesStoredQuotaAmount(t *testing.T) {
+	truncateTables(t)
+
+	insertUserForPaymentGuardTest(t, 120, 0)
+	topUp := &TopUp{
+		UserId:          120,
+		Amount:          300000000,
+		Money:           299.99,
+		TradeNo:         "creem-manual-complete",
+		PaymentMethod:   PaymentMethodCreem,
+		PaymentProvider: PaymentProviderCreem,
+		Status:          common.TopUpStatusPending,
+		CreateTime:      time.Now().Unix(),
+	}
+	require.NoError(t, topUp.Insert())
+
+	err := ManualCompleteTopUp("creem-manual-complete", "127.0.0.1")
+	require.NoError(t, err)
+
+	assert.Equal(t, 300000000, getUserQuotaForPaymentGuardTest(t, 120))
+	assert.Equal(t, common.TopUpStatusSuccess, getTopUpStatusForPaymentGuardTest(t, "creem-manual-complete"))
+}
+
 func TestUpdatePendingTopUpStatus_RejectsMismatchedPaymentProvider(t *testing.T) {
 	testCases := []struct {
 		name                    string
