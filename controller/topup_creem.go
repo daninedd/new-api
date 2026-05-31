@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -360,9 +362,10 @@ func handleCheckoutCompleted(c *gin.Context, event *CreemWebhookEvent) {
 }
 
 type CreemCheckoutRequest struct {
-	ProductId string `json:"product_id"`
-	RequestId string `json:"request_id"`
-	Customer  struct {
+	ProductId  string `json:"product_id"`
+	RequestId  string `json:"request_id"`
+	SuccessUrl string `json:"success_url,omitempty"`
+	Customer   struct {
 		Email string `json:"email"`
 	} `json:"customer"`
 	Metadata map[string]string `json:"metadata,omitempty"`
@@ -389,6 +392,12 @@ func genCreemLink(ctx context.Context, referenceId string, product *CreemProduct
 	requestData := CreemCheckoutRequest{
 		ProductId: product.ProductId,
 		RequestId: referenceId, // 这个作为订单ID传递给Creem
+		SuccessUrl: paymentReturnPath(fmt.Sprintf(
+			"/console/topup?show_history=true&pay=success&transaction_id=%s&value=%s&currency=%s",
+			url.QueryEscape(referenceId),
+			url.QueryEscape(strconv.FormatFloat(product.Price, 'f', 2, 64)),
+			url.QueryEscape(product.Currency),
+		)),
 		Customer: struct {
 			Email string `json:"email"`
 		}{

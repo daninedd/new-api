@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSelf } from '@/lib/api'
+import { trackGoogleAdsPurchaseConversion } from '@/lib/google-ads'
 import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { SectionPageLayout } from '@/components/layout'
@@ -54,6 +55,24 @@ import type {
 
 interface WalletProps {
   initialShowHistory?: boolean
+}
+
+const GOOGLE_ADS_CONVERSION_STORAGE_PREFIX = 'google_ads_purchase_conversion:'
+
+function getConversionParam(searchParams: URLSearchParams, keys: string[]) {
+  for (const key of keys) {
+    const value = searchParams.get(key)
+    if (value) {
+      return value
+    }
+  }
+  return ''
+}
+
+function getConversionValue(searchParams: URLSearchParams) {
+  const rawValue = getConversionParam(searchParams, ['value', 'money', 'amount'])
+  const value = Number.parseFloat(rawValue)
+  return Number.isFinite(value) && value > 0 ? value : 1
 }
 
 export function Wallet(props: WalletProps) {
@@ -122,6 +141,33 @@ export function Wallet(props: WalletProps) {
   useEffect(() => {
     fetchUser()
   }, [fetchUser])
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    if (searchParams.get('pay') !== 'success') {
+      return
+    }
+
+    const transactionId = getConversionParam(searchParams, [
+      'transaction_id',
+      'trade_no',
+      'out_trade_no',
+      'order_id',
+      'session_id',
+    ])
+    const storageKey = `${GOOGLE_ADS_CONVERSION_STORAGE_PREFIX}${transactionId || window.location.search}`
+
+    if (window.sessionStorage.getItem(storageKey)) {
+      return
+    }
+
+    trackGoogleAdsPurchaseConversion({
+      value: getConversionValue(searchParams),
+      currency: searchParams.get('currency') || 'USD',
+      transactionId,
+    })
+    window.sessionStorage.setItem(storageKey, '1')
+  }, [])
 
   useEffect(() => {
     if (props.initialShowHistory) {

@@ -213,7 +213,10 @@ func SubscriptionEpayReturn(c *gin.Context) {
 			c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?pay=fail"))
 			return
 		}
-		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?pay=success"))
+		c.Redirect(http.StatusFound, paymentReturnPath(fmt.Sprintf(
+			"/console/topup?show_history=true&pay=success&transaction_id=%s",
+			url.QueryEscape(verifyInfo.ServiceTradeNo),
+		)))
 		return
 	}
 	c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?pay=pending"))

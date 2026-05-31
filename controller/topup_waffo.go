@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -236,12 +237,19 @@ func RequestWaffoPay(c *gin.Context) {
 	if setting.WaffoNotifyUrl != "" {
 		notifyUrl = setting.WaffoNotifyUrl
 	}
-	returnUrl := paymentReturnPath("/console/topup?show_history=true")
+	currency := getWaffoCurrency()
+	successReturnUrl := paymentReturnPath(fmt.Sprintf(
+		"/console/topup?show_history=true&pay=success&transaction_id=%s&value=%s&currency=%s",
+		url.QueryEscape(merchantOrderId),
+		url.QueryEscape(formatWaffoAmount(payMoney, currency)),
+		url.QueryEscape(currency),
+	))
+	failedReturnUrl := paymentReturnPath("/console/topup?show_history=true&pay=fail")
 	if setting.WaffoReturnUrl != "" {
-		returnUrl = setting.WaffoReturnUrl
+		successReturnUrl = setting.WaffoReturnUrl
+		failedReturnUrl = setting.WaffoReturnUrl
 	}
 
-	currency := getWaffoCurrency()
 	createParams := &order.CreateOrderParams{
 		PaymentRequestID: paymentRequestId,
 		MerchantOrderID:  merchantOrderId,
@@ -263,8 +271,8 @@ func RequestWaffoPay(c *gin.Context) {
 			PayMethodType: resolvedPayMethodType,
 			PayMethodName: resolvedPayMethodName,
 		},
-		SuccessRedirectURL: returnUrl,
-		FailedRedirectURL:  returnUrl,
+		SuccessRedirectURL: successReturnUrl,
+		FailedRedirectURL:  failedReturnUrl,
 	}
 	resp, err := sdk.Order().Create(c.Request.Context(), createParams, nil)
 	if err != nil {

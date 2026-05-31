@@ -216,7 +216,7 @@ func RequestEpay(c *gin.Context) {
 	}
 
 	callBackAddress := service.GetCallbackAddress()
-	returnUrl, _ := url.Parse(paymentReturnPath("/console/log"))
+	returnUrl, _ := url.Parse(callBackAddress + "/api/user/epay/return")
 	notifyUrl, _ := url.Parse(callBackAddress + "/api/user/epay/notify")
 	tradeNo := fmt.Sprintf("%s%d", common.GetRandomString(6), time.Now().Unix())
 	tradeNo = fmt.Sprintf("USR%dNO%s", id, tradeNo)
@@ -409,6 +409,78 @@ func EpayNotify(c *gin.Context) {
 	} else {
 		logger.LogInfo(c.Request.Context(), fmt.Sprintf("易支付 webhook 忽略事件 trade_no=%s callback_type=%s trade_status=%s client_ip=%s verify_info=%q", verifyInfo.ServiceTradeNo, verifyInfo.Type, verifyInfo.TradeStatus, c.ClientIP(), common.GetJsonString(verifyInfo)))
 	}
+}
+
+func EpayReturn(c *gin.Context) {
+	var params map[string]string
+
+	if c.Request.Method == "POST" {
+		if err := c.Request.ParseForm(); err != nil {
+			c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+			return
+		}
+		params = lo.Reduce(lo.Keys(c.Request.PostForm), func(r map[string]string, t string, i int) map[string]string {
+			r[t] = c.Request.PostForm.Get(t)
+			return r
+		}, map[string]string{})
+	} else {
+		params = lo.Reduce(lo.Keys(c.Request.URL.Query()), func(r map[string]string, t string, i int) map[string]string {
+			r[t] = c.Request.URL.Query().Get(t)
+			return r
+		}, map[string]string{})
+	}
+
+	if len(params) == 0 {
+		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+		return
+	}
+
+	client := GetEpayClient()
+	if client == nil {
+		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+		return
+	}
+	verifyInfo, err := client.Verify(params)
+	if err != nil || !verifyInfo.VerifyStatus {
+		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+		return
+	}
+	if verifyInfo.TradeStatus != epay.StatusTradeSuccess {
+		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=pending"))
+		return
+	}
+
+	LockOrder(verifyInfo.ServiceTradeNo)
+	defer UnlockOrder(verifyInfo.ServiceTradeNo)
+	topUp := model.GetTopUpByTradeNo(verifyInfo.ServiceTradeNo)
+	if topUp == nil || topUp.PaymentProvider != model.PaymentProviderEpay {
+		c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+		return
+	}
+	if topUp.Status == common.TopUpStatusPending {
+		if topUp.PaymentMethod != verifyInfo.Type {
+			topUp.PaymentMethod = verifyInfo.Type
+		}
+		topUp.Status = common.TopUpStatusSuccess
+		if err := topUp.Update(); err != nil {
+			c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+			return
+		}
+		dAmount := decimal.NewFromInt(int64(topUp.Amount))
+		dQuotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
+		quotaToAdd := int(dAmount.Mul(dQuotaPerUnit).IntPart())
+		if err := model.IncreaseUserQuota(topUp.UserId, quotaToAdd, true); err != nil {
+			c.Redirect(http.StatusFound, paymentReturnPath("/console/topup?show_history=true&pay=fail"))
+			return
+		}
+		model.RecordTopupLog(topUp.UserId, fmt.Sprintf("Online top-up successful, top-up amount: %v，payment amount: %f", logger.LogQuota(quotaToAdd), topUp.Money), c.ClientIP(), topUp.PaymentMethod, "epay")
+	}
+
+	c.Redirect(http.StatusFound, paymentReturnPath(fmt.Sprintf(
+		"/console/topup?show_history=true&pay=success&transaction_id=%s&value=%s&currency=USD",
+		url.QueryEscape(topUp.TradeNo),
+		url.QueryEscape(strconv.FormatFloat(topUp.Money, 'f', 2, 64)),
+	)))
 }
 
 func RequestAmount(c *gin.Context) {
