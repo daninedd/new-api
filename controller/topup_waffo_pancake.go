@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -398,6 +399,14 @@ func RequestWaffoPancakePay(c *gin.Context) {
 	}
 
 	expiresInSeconds := 45 * 60
+	successReturnURL := paymentReturnPath(fmt.Sprintf(
+		"/console/topup?show_history=true&pay=success&transaction_id=%s&value=%s&currency=USD",
+		url.QueryEscape(tradeNo),
+		url.QueryEscape(formatWaffoPancakeAmount(payMoney)),
+	))
+	if strings.TrimSpace(setting.WaffoPancakeReturnURL) != "" {
+		successReturnURL = strings.TrimSpace(setting.WaffoPancakeReturnURL)
+	}
 	session, err := service.CreateWaffoPancakeCheckoutSession(c.Request.Context(), &service.WaffoPancakeCreateSessionParams{
 		ProductID:     setting.WaffoPancakeProductID,
 		BuyerIdentity: getWaffoPancakeBuyerIdentity(user),
@@ -406,6 +415,7 @@ func RequestWaffoPancakePay(c *gin.Context) {
 			TaxCategory: "saas",
 		},
 		BuyerEmail:              getWaffoPancakeBuyerEmail(user),
+		SuccessURL:              successReturnURL,
 		ExpiresInSeconds:        &expiresInSeconds,
 		OrderMerchantExternalID: tradeNo,
 	})

@@ -96,6 +96,14 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 	}
 
 	expiresInSeconds := 45 * 60
+	successReturnURL := paymentReturnPath(fmt.Sprintf(
+		"/console/topup?show_history=true&pay=success&transaction_id=%s&value=%s&currency=USD",
+		tradeNo,
+		decimal.NewFromFloat(plan.PriceAmount).StringFixed(2),
+	))
+	if strings.TrimSpace(setting.WaffoPancakeReturnURL) != "" {
+		successReturnURL = strings.TrimSpace(setting.WaffoPancakeReturnURL)
+	}
 	session, err := service.CreateWaffoPancakeCheckoutSession(c.Request.Context(), &service.WaffoPancakeCreateSessionParams{
 		ProductID:     plan.WaffoPancakeProductId,
 		BuyerIdentity: service.WaffoPancakeBuyerIdentityFromUserID(user.Id),
@@ -104,6 +112,7 @@ func SubscriptionRequestWaffoPancakePay(c *gin.Context) {
 			TaxCategory: "saas",
 		},
 		BuyerEmail:              getWaffoPancakeBuyerEmail(user),
+		SuccessURL:              successReturnURL,
 		ExpiresInSeconds:        &expiresInSeconds,
 		OrderMerchantExternalID: tradeNo,
 	})

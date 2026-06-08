@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/base64"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -182,6 +184,7 @@ func InitOptionMap() {
 
 	common.OptionMapRWMutex.Unlock()
 	loadOptionsFromDatabase()
+	applyWaffoPancakeEnvOverrides()
 }
 
 func loadOptionsFromDatabase() {
@@ -194,11 +197,42 @@ func loadOptionsFromDatabase() {
 	}
 }
 
+func applyWaffoPancakeEnvOverrides() {
+	values := map[string]string{}
+	envToOption := map[string]string{
+		"WAFFO_PANCAKE_MERCHANT_ID": "WaffoPancakeMerchantID",
+		"WAFFO_PANCAKE_PRIVATE_KEY": "WaffoPancakePrivateKey",
+		"WAFFO_PANCAKE_RETURN_URL":  "WaffoPancakeReturnURL",
+		"WAFFO_PANCAKE_STORE_ID":    "WaffoPancakeStoreID",
+		"WAFFO_PANCAKE_PRODUCT_ID":  "WaffoPancakeProductID",
+		"WAFFO_PANCAKE_UNIT_PRICE":  "WaffoPancakeUnitPrice",
+		"WAFFO_PANCAKE_MIN_TOPUP":   "WaffoPancakeMinTopUp",
+	}
+	for envName, optionName := range envToOption {
+		if value := strings.TrimSpace(os.Getenv(envName)); value != "" {
+			values[optionName] = value
+		}
+	}
+	if encodedKey := strings.TrimSpace(os.Getenv("WAFFO_PANCAKE_PRIVATE_KEY_BASE64")); encodedKey != "" {
+		if decoded, err := base64.StdEncoding.DecodeString(encodedKey); err == nil {
+			values["WaffoPancakePrivateKey"] = string(decoded)
+		} else {
+			common.SysLog("failed to decode WAFFO_PANCAKE_PRIVATE_KEY_BASE64: " + err.Error())
+		}
+	}
+	for key, value := range values {
+		if err := updateOptionMap(key, value); err != nil {
+			common.SysLog("failed to apply Waffo Pancake env override: " + err.Error())
+		}
+	}
+}
+
 func SyncOptions(frequency int) {
 	for {
 		time.Sleep(time.Duration(frequency) * time.Second)
 		common.SysLog("syncing options from database")
 		loadOptionsFromDatabase()
+		applyWaffoPancakeEnvOverrides()
 	}
 }
 
