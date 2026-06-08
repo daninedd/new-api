@@ -182,7 +182,7 @@ export function Wallet(props: WalletProps) {
       const initialPreset = presetAmounts[0]
       const minTopup = initialPreset
         ? initialPreset.value
-        : Math.max(getMinTopupAmount(topupInfo), 10)
+        : getMinTopupAmount(topupInfo)
       setTopupAmount(minTopup)
       setSelectedPreset(initialPreset?.value ?? null)
 
@@ -199,7 +199,7 @@ export function Wallet(props: WalletProps) {
 
   const getMinimumTopupForCurrentInput = useCallback(() => {
     const minTopup = getMinTopupAmount(topupInfo)
-    return selectedPreset === null ? Math.max(minTopup, 10) : minTopup
+    return minTopup
   }, [selectedPreset, topupInfo])
 
   // Handle preset selection

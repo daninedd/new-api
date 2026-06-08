@@ -135,7 +135,7 @@ export function RechargeFormCard({
   const hasWaffoPaymentMethods =
     Array.isArray(waffoPayMethods) && waffoPayMethods.length > 0
   const minTopup = getMinTopupAmount(topupInfo)
-  const customMinTopup = Math.max(minTopup, 10)
+  const customMinTopup = minTopup
   const isCustomAmount = selectedPreset === null
   const minimumAllowedAmount = isCustomAmount ? customMinTopup : minTopup
   const redemptionEnabled = topupInfo?.enable_redemption !== false
