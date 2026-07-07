@@ -18,8 +18,10 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Activity, BarChart3, WalletCards } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { formatUserQuota } from '@/lib/format'
+
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatQuota } from '@/lib/format'
+
 import type { UserWalletData } from '../types'
 
 interface WalletStatsCardProps {
@@ -48,13 +50,13 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   const stats = [
     {
       label: t('Current Balance'),
-      value: formatUserQuota(props.user?.quota ?? 0),
+      value: formatQuota(props.user?.quota ?? 0),
       description: t('Remaining quota'),
       icon: WalletCards,
     },
     {
       label: t('Total Usage'),
-      value: formatUserQuota(props.user?.used_quota ?? 0),
+      value: formatQuota(props.user?.used_quota ?? 0),
       description: t('Total consumed quota'),
       icon: BarChart3,
     },

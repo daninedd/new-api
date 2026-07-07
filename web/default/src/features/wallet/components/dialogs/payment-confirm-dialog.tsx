@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,8 +30,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatLocalCurrencyAmount } from '@/lib/currency'
+
 import { DEFAULT_DISCOUNT_RATE } from '../../constants'
-import { formatCurrency, formatTopupCredit, getPaymentIcon } from '../../lib'
+import { formatCurrency, getPaymentIcon } from '../../lib'
 import type { PaymentMethod } from '../../types'
 
 interface PaymentConfirmDialogProps {
@@ -43,6 +46,7 @@ interface PaymentConfirmDialogProps {
   calculating: boolean
   processing: boolean
   discountRate?: number
+  usdExchangeRate?: number
 }
 
 export function PaymentConfirmDialog({
@@ -55,6 +59,7 @@ export function PaymentConfirmDialog({
   calculating,
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
+  usdExchangeRate = 1,
 }: PaymentConfirmDialogProps) {
   const { t } = useTranslation()
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
@@ -79,7 +84,11 @@ export function PaymentConfirmDialog({
               {t('Topup Amount')}
             </span>
             <span className='text-lg font-semibold'>
-              {formatTopupCredit(topupAmount)}
+              {formatLocalCurrencyAmount(topupAmount * usdExchangeRate, {
+                digitsLarge: 2,
+                digitsSmall: 2,
+                abbreviate: false,
+              })}
             </span>
           </div>
 
@@ -124,8 +133,7 @@ export function PaymentConfirmDialog({
                   paymentMethod?.type,
                   'h-4 w-4',
                   paymentMethod?.icon,
-                  paymentMethod?.name,
-                  paymentMethod?.color
+                  paymentMethod?.name
                 )}
                 <span className='font-medium'>{paymentMethod?.name}</span>
               </div>

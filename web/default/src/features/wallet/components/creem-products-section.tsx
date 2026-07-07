@@ -17,9 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
+
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCreemPrice, formatCreditUnits } from '../lib/format'
+import { formatNumber } from '@/lib/format'
+
+import { formatCreemPrice } from '../lib/format'
 import type { CreemProduct } from '../types'
 
 interface CreemProductsSectionProps {
@@ -54,15 +57,16 @@ export function CreemProductsSection({
       {products.map((product) => (
         <Card
           key={product.productId}
-          className='hover:border-foreground/50 cursor-pointer transition-all hover:shadow-md'
+          data-card-hover='false'
+          className='cursor-pointer'
           onClick={() => onProductSelect(product)}
         >
           <CardContent className='p-3 text-center sm:p-4'>
             <div className='mb-2 text-lg font-medium'>{product.name}</div>
             <div className='text-muted-foreground mb-2 text-sm'>
-              {t('Quota')}: {formatCreditUnits(product.quota)}
+              {t('Quota')}: {formatNumber(product.quota)}
             </div>
-            <div className='text-lg font-semibold text-indigo-600'>
+            <div className='text-primary text-lg font-semibold'>
               {formatCreemPrice(product.price, product.currency)}
             </div>
           </CardContent>
